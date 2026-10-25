@@ -36,12 +36,13 @@
 - Smoke тест на patched build (001+002): rendezvous mediator → нашия сървър (UDP latency + NAT отговори на 21116/21115); exe, преименуван на `rustdesk-host=evil.example.com,...`, пак ползва само нашия сървър ✅.
 - `common/003-relay-policy`: без proxy (`get/set_socks`, `get_network_type`), `allow-insecure-tls-fallback` винаги изключено (N2), WebRTC изключен структурно (`WebRTCStream::new` → грешка; клиентът иначе отговаря на WebRTC оферти независимо от `enable-webrtc` и ползва публични STUN), без IPv6 STUN проба. P2P = TCP hole punching + relay само през нашия сървър (relay идва от сървъра, override-ът е блокиран в 002). Smoke тест: STUN заявките изчезнаха, няма TCP към чужди адреси ✅.
 - `common/010-force-bulgarian`: `resolve_lang` → винаги `bg` (записан `lang`, системен locale и езикът от другата страна се игнорират); `locale: Locale('bg')` в двата `GetMaterialApp`; махната карта „Language“ от общите настройки. Визуално потвърдено от потребителя на en-US Windows без записан език ✅. Забележка: снимка на прозореца от shell-а излиза празна (Flutter/GPU) — визуалните проверки ги прави потребителят.
+- `common/011-light-theme-forced`: `MyTheme.getThemeModePreference()` → винаги light; `changeDarkMode()` форсира light (настройки, broadcast между прозорците, CM); махната карта „Theme“. Визуално потвърдено със записано `theme = 'dark'` ✅.
 - Сървър (2026-10-25): nginx подаваше само крайния сертификат → rustls даваше `InvalidCertificate(UnknownIssuer)`. Поправено на сървъра: `/etc/nginx/ssl/apis.crt` = краен + Sectigo DV R36 (копие `apis.crt.bak-2026-10-25`); `apis.key` → `600`. Отвън `Verify return code: 0`, грешката изчезна от лога ✅. Дублираните server блокове за сайта (в `sites-available/default` и `<сайт>`) са обединени в `sites-available/<сайт>` (вкл. `location /api/` → `127.0.0.1:8001`, който липсваше там); `default` = само catch-all. Копие: `/root/nginx-backup-2026-10-25/`. `nginx -t` без предупреждения, `/api/` пак стига до бекенда ✅.
 - Капан: `Build-Baseline.ps1` с `*>` пренасочване в PowerShell 5.1 пада (stderr на cargo → грешка при `ErrorActionPreference=Stop`); пренасочвай отвън (`powershell -File ... > log 2>&1`).
 
 ## 3. Следваща стъпка (започни оттук)
 
-**Фаза 1, продължение** (виж картата в `ARCHITECTURE.md` §6.1): `011-light-theme-forced`, после strip-rustdesk-strings, security hardening.
+**Фаза 1, продължение** (виж картата в `ARCHITECTURE.md` §6.1): `020-strip-rustdesk-strings`, после strip-rustdesk-strings, security hardening.
 
 Още липсва `Build-Product.ps1`; дотогава build върху патчнат source = `Apply-Patches.ps1` + `Build-Baseline.ps1`.
 

@@ -1,0 +1,31 @@
+diff --git a/flutter/lib/common.dart b/flutter/lib/common.dart
+index b80e0b5..836e3bf 100644
+--- a/flutter/lib/common.dart
++++ b/flutter/lib/common.dart
+@@ -577,10 +577,13 @@ class MyTheme {
+   );
+ 
+   static ThemeMode getThemeModePreference() {
+-    return themeModeFromString(bind.mainGetLocalOption(key: kCommConfKeyTheme));
++    // Apis (B6): light theme is forced; the saved option and system theme are ignored.
++    return ThemeMode.light;
+   }
+ 
+   static Future<void> changeDarkMode(ThemeMode mode) async {
++    // Apis (B6): settings, other windows and the peer cannot switch away from light.
++    mode = ThemeMode.light;
+     Get.changeThemeMode(mode);
+     if (desktopType == DesktopType.main || isAndroid || isIOS || isWeb) {
+       if (mode == ThemeMode.system) {
+diff --git a/flutter/lib/desktop/pages/desktop_setting_page.dart b/flutter/lib/desktop/pages/desktop_setting_page.dart
+index 494b5c2..2085a16 100644
+--- a/flutter/lib/desktop/pages/desktop_setting_page.dart
++++ b/flutter/lib/desktop/pages/desktop_setting_page.dart
+@@ -413,7 +413,6 @@ class _GeneralState extends State<_General> {
+       controller: scrollController,
+       children: [
+         if (!isWeb) service(),
+-        theme(),
+         if (!isWeb) hwcodec(),
+         if (!isWeb) audio(context),
+         if (!isWeb) record(context),

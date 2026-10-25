@@ -1,0 +1,79 @@
+diff --git a/src/config.rs b/src/config.rs
+index 2fac00b..7aa3f59 100644
+--- a/src/config.rs
++++ b/src/config.rs
+@@ -907,7 +907,27 @@ impl Config {
+         }
+     }
+ 
++    // Apis (N3): server, relay, API and key are built in; these options are never read or stored.
++    fn is_locked_server_option(k: &str) -> bool {
++        [
++            "custom-rendezvous-server",
++            "rendezvous-servers",
++            "relay-server",
++            "api-server",
++            "key",
++        ]
++        .contains(&k)
++    }
++
++    #[allow(unreachable_code)]
+     pub fn get_rendezvous_server() -> String {
++        // Apis (N3): only the built-in server; exe-name, option and stored overrides are ignored.
++        let s = RENDEZVOUS_SERVERS[0];
++        return if s.contains(':') {
++            s.to_owned()
++        } else {
++            format!("{s}:{RENDEZVOUS_PORT}")
++        };
+         let mut rendezvous_server = EXE_RENDEZVOUS_SERVER.read().unwrap().clone();
+         if rendezvous_server.is_empty() {
+             rendezvous_server = Self::get_option("custom-rendezvous-server");
+@@ -930,7 +950,10 @@ impl Config {
+         rendezvous_server
+     }
+ 
++    #[allow(unreachable_code)]
+     pub fn get_rendezvous_servers() -> Vec<String> {
++        // Apis (N3): only the built-in server.
++        return RENDEZVOUS_SERVERS.iter().map(|x| x.to_string()).collect();
+         let s = EXE_RENDEZVOUS_SERVER.read().unwrap().clone();
+         if !s.is_empty() {
+             return vec![s];
+@@ -1221,6 +1244,7 @@ impl Config {
+         let mut res = DEFAULT_SETTINGS.read().unwrap().clone();
+         res.extend(CONFIG2.read().unwrap().options.clone());
+         res.extend(OVERWRITE_SETTINGS.read().unwrap().clone());
++        res.retain(|k, _| !Self::is_locked_server_option(k));
+         res
+     }
+ 
+@@ -1231,6 +1255,7 @@ impl Config {
+ 
+     pub fn set_options(mut v: HashMap<String, String>) {
+         Self::purify_options(&mut v);
++        v.retain(|k, _| !Self::is_locked_server_option(k));
+         let mut config = CONFIG2.write().unwrap();
+         if config.options == v {
+             return;
+@@ -1240,6 +1265,9 @@ impl Config {
+     }
+ 
+     pub fn get_option(k: &str) -> String {
++        if Self::is_locked_server_option(k) {
++            return "".to_owned();
++        }
+         get_or(
+             &OVERWRITE_SETTINGS,
+             &CONFIG2.read().unwrap().options,
+@@ -1254,6 +1282,9 @@ impl Config {
+     }
+ 
+     pub fn set_option(k: String, v: String) {
++        if Self::is_locked_server_option(&k) {
++            return;
++        }
+         if !is_option_can_save(&OVERWRITE_SETTINGS, &k, &DEFAULT_SETTINGS, &v) {
+             let mut config = CONFIG2.write().unwrap();
+             if config.options.remove(&k).is_some() {

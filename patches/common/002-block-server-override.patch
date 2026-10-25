@@ -1,0 +1,30 @@
+diff --git a/src/client.rs b/src/client.rs
+index d3e66e7..a121da3 100644
+--- a/src/client.rs
++++ b/src/client.rs
+@@ -2936,6 +2936,10 @@ impl LoginConfigHandler {
+         conn_token: Option<String>,
+     ) {
+         let mut id = id;
++        // Apis (N3): peers are reached only through the built-in server.
++        if let Some(pos) = id.find('@') {
++            id.truncate(pos);
++        }
+         if id.contains("@") {
+             let mut v = id.split("@");
+             let raw_id: &str = v.next().unwrap_or_default();
+diff --git a/src/custom_server.rs b/src/custom_server.rs
+index 3a7d60f..bed1ec4 100644
+--- a/src/custom_server.rs
++++ b/src/custom_server.rs
+@@ -41,7 +41,10 @@ fn get_custom_server_from_config_string(s: &str) -> ResultType<CustomServer> {
+     }
+ }
+ 
++#[allow(unreachable_code, unused_variables)]
+ pub fn get_custom_server_from_string(s: &str) -> ResultType<CustomServer> {
++    // Apis (N3): the server is never taken from the exe name or a --config string.
++    bail!("custom server strings are disabled");
+     let s = if s.to_lowercase().ends_with(".exe.exe") {
+         &s[0..s.len() - 8]
+     } else if s.to_lowercase().ends_with(".exe") {

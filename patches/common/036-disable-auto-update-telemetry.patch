@@ -1,0 +1,16 @@
+diff --git a/src/common.rs b/src/common.rs
+index 32cbf8f..83637ff 100644
+--- a/src/common.rs
++++ b/src/common.rs
+@@ -1029,8 +1029,11 @@ pub fn check_software_update() {
+ 
+ // No need to check `danger_accept_invalid_cert` for now.
+ // Because the url is always `https://api.rustdesk.com/version/latest`.
++#[allow(unreachable_code)]
+ #[tokio::main(flavor = "current_thread")]
+ pub async fn do_check_software_update() -> hbb_common::ResultType<()> {
++    // Apis (P11): no version check against api.rustdesk.com, so no update offer or auto-update.
++    return Ok(());
+     let (request, url) =
+         hbb_common::version_check_request(hbb_common::VER_TYPE_RUSTDESK_CLIENT.to_string());
+     let proxy_conf = Config::get_socks();

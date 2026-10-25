@@ -113,7 +113,7 @@ ApisSupport/                      # ново, самостоятелно repo
 | `020-strip-rustdesk-strings` | B4 | Премахва „RustDesk" / „Powered by RustDesk" надписи |
 | `030-remove-lan-discovery` | P9 | Маха UDP broadcast |
 | `031-remove-direct-ip-tunneling` | P10 | Маха direct-IP + TCP tunneling код-пътища |
-| `032-remove-plugin-system` | P8 | Маха зареждане на plugins |
+| ~~`032-remove-plugin-system`~~ | P8 | **Не е нужен:** plugin системата липсва в RustDesk 1.5.0 (няма `src/plugin/`, няма `plugin_framework` feature). Динамично се зареждат само фиксирани DLL-и от папката на приложението (Flutter texture renderers, printer adapter) и системни. Да се провери отново при upgrade. |
 | `033-remove-camera` | P5 | Маха camera access |
 | `034-remove-block-input` | P6 | Маха block-input |
 | `035-remove-privacy-mode` | P7 | Маха privacy mode |

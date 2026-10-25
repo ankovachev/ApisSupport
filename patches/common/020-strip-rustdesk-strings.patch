@@ -1,0 +1,50 @@
+diff --git a/flutter/lib/common.dart b/flutter/lib/common.dart
+index 836e3bf..4231d22 100644
+--- a/flutter/lib/common.dart
++++ b/flutter/lib/common.dart
+@@ -3024,7 +3024,8 @@ int versionCmp(String v1, String v2) {
+ }
+ 
+ String getWindowName({WindowType? overrideType}) {
+-  final name = bind.mainGetAppNameSync();
++  // Apis (B1/B7): visible window title instead of the internal app name.
++  final name = '{{WINDOW_TITLE}}';
+   switch (overrideType ?? kWindowType) {
+     case WindowType.Main:
+       return name;
+@@ -3734,6 +3735,8 @@ Color? disabledTextColor(BuildContext context, bool enabled) {
+ }
+ 
+ Widget loadPowered(BuildContext context) {
++  // Apis (B4): no "Powered by RustDesk" link.
++  return SizedBox.shrink();
+   if (bind.mainGetBuildinOption(key: "hide-powered-by-me") == 'Y') {
+     return SizedBox.shrink();
+   }
+diff --git a/flutter/lib/desktop/widgets/tabbar_widget.dart b/flutter/lib/desktop/widgets/tabbar_widget.dart
+index 9ef7d38..234a90b 100644
+--- a/flutter/lib/desktop/widgets/tabbar_widget.dart
++++ b/flutter/lib/desktop/widgets/tabbar_widget.dart
+@@ -641,7 +641,8 @@ class _DesktopTabState extends State<DesktopTab>
+                         Offstage(
+                             offstage: !showTitle,
+                             child: const Text(
+-                              "RustDesk",
++                              // Apis (B1): visible title instead of "RustDesk".
++                              '{{WINDOW_TITLE}}',
+                               style: TextStyle(fontSize: 13),
+                             ).marginOnly(left: 2))
+                       ]).marginOnly(
+diff --git a/src/lang.rs b/src/lang.rs
+index c23c036..331a09e 100644
+--- a/src/lang.rs
++++ b/src/lang.rs
+@@ -253,6 +253,8 @@ pub fn translate_locale(name: String, locale: &str) -> String {
+         if let Some(value) = placeholder_value.as_ref() {
+             s = s.replace("{}", &value);
+         }
++        // Apis (B4/B7): the visible product name replaces "RustDesk" in every text.
++        s = s.replace("RustDesk", "{{DISPLAY_NAME}}");
+         if !crate::is_rustdesk() {
+             if s.contains("RustDesk")
+                 && !name.starts_with("upgrade_rustdesk_server_pro")

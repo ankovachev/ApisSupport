@@ -38,13 +38,14 @@
 - `common/010-force-bulgarian`: `resolve_lang` → винаги `bg` (записан `lang`, системен locale и езикът от другата страна се игнорират); `locale: Locale('bg')` в двата `GetMaterialApp`; махната карта „Language“ от общите настройки. Визуално потвърдено от потребителя на en-US Windows без записан език ✅. Забележка: снимка на прозореца от shell-а излиза празна (Flutter/GPU) — визуалните проверки ги прави потребителят.
 - `common/011-light-theme-forced`: `MyTheme.getThemeModePreference()` → винаги light; `changeDarkMode()` форсира light (настройки, broadcast между прозорците, CM); махната карта „Theme“. Визуално потвърдено със записано `theme = 'dark'` ✅.
 - Поправка в 002: `using_public_server()` → винаги `false`. Блокираната опция `custom-rendezvous-server` е винаги празна и приложението се мислеше за публичния сървър на RustDesk (линк „направете свой собствен сървър“, ограничено FPS/качество при relay, по-рядка проверка на онлайн статус, backoff при регистрация). Визуално потвърдено ✅.
+- `common/020-strip-rustdesk-strings`: „RustDesk“ във всички преводи → `{{DISPLAY_NAME}}` (видимото име по продукт); заглавие на прозореца и текстът до логото в таба → `{{WINDOW_TITLE}}`; „Powered by RustDesk“ махнат. `Apply-Patches.ps1`: нови token-и `DISPLAY_NAME`/`WINDOW_TITLE` + отказ на стойности с кавички/`\`/нов ред (отиват в низове в кода). Визуално потвърдено ✅. Остават линкове към rustdesk.com в скрити/по-късни места (about/privacy в настройките → 007, install page → QS, update → 036); иконата → branding (B1).
 - Видяно, за Фаза 2: UAC/„Инсталирай“ банер (F1/F2), connect панел, еднократна парола (A3).
 - Сървър (2026-10-25): nginx подаваше само крайния сертификат → rustls даваше `InvalidCertificate(UnknownIssuer)`. Поправено на сървъра: `/etc/nginx/ssl/apis.crt` = краен + Sectigo DV R36 (копие `apis.crt.bak-2026-10-25`); `apis.key` → `600`. Отвън `Verify return code: 0`, грешката изчезна от лога ✅. Дублираните server блокове за сайта (в `sites-available/default` и `<сайт>`) са обединени в `sites-available/<сайт>` (вкл. `location /api/` → `127.0.0.1:8001`, който липсваше там); `default` = само catch-all. Копие: `/root/nginx-backup-2026-10-25/`. `nginx -t` без предупреждения, `/api/` пак стига до бекенда ✅.
 - Капан: `Build-Baseline.ps1` с `*>` пренасочване в PowerShell 5.1 пада (stderr на cargo → грешка при `ErrorActionPreference=Stop`); пренасочвай отвън (`powershell -File ... > log 2>&1`).
 
 ## 3. Следваща стъпка (започни оттук)
 
-**Фаза 1, продължение** (виж картата в `ARCHITECTURE.md` §6.1): `020-strip-rustdesk-strings`, после strip-rustdesk-strings, security hardening.
+**Фаза 1, продължение** (виж картата в `ARCHITECTURE.md` §6.1): `030-remove-lan-discovery` и останалия security hardening (031–038). После Фаза 2 (QuickSupport патчове).
 
 Още липсва `Build-Product.ps1`; дотогава build върху патчнат source = `Apply-Patches.ps1` + `Build-Baseline.ps1`.
 

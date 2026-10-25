@@ -39,13 +39,17 @@ if ($secrets.server.rendezvous -match 'example\.com' -or $secrets.server.public_
 }
 
 $tokens = [ordered]@{
-    APP_NAME   = $config.branding.app_name
-    SERVER     = $secrets.server.rendezvous
-    API_SERVER = $secrets.server.api
-    PUBLIC_KEY = $secrets.server.public_key
+    APP_NAME     = $config.branding.app_name
+    DISPLAY_NAME = $config.branding.display_name
+    WINDOW_TITLE = $config.branding.window_title
+    SERVER       = $secrets.server.rendezvous
+    API_SERVER   = $secrets.server.api
+    PUBLIC_KEY   = $secrets.server.public_key
 }
 foreach ($t in $tokens.GetEnumerator()) {
     if ([string]::IsNullOrWhiteSpace($t.Value)) { throw "Token {{$($t.Key)}} has no value in the configs" }
+    # Values land inside Rust/Dart string literals.
+    if ($t.Value -match "[`"'\\\r\n]") { throw "Token {{$($t.Key)}} contains a quote, backslash or newline" }
 }
 
 $patches = @('common', $Product) | ForEach-Object {

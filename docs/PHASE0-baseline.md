@@ -25,6 +25,8 @@
 
 ## Стъпки (повторяеми)
 
+Автоматизирани в `scripts/Build-Baseline.ps1` (`-InstallDeps` за първоначален `vcpkg install`). Ръчно:
+
 ```powershell
 $env:VCPKG_ROOT = 'C:\src\ApisSupport\vcpkg'
 $env:VCPKG_DEFAULT_HOST_TRIPLET = 'x64-windows-static'

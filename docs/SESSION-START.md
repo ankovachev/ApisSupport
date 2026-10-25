@@ -35,7 +35,22 @@
 
 **Фаза 1: `common/` патчове** (виж картата в `ARCHITECTURE.md` §6.1): server-config (от `secrets.json`), block-server-override, relay policy, force-bulgarian, light-theme, strip-rustdesk-strings, security hardening.
 
-Заедно с първите патчове — scripts `Reset-Vanilla` / `Apply-Patches` / `Build-Product`, автоматизиращи стъпките от `PHASE0-baseline.md` (вкл. връщане на `flutter/pubspec.lock`).
+Заедно с първите патчове — scripts `Reset-Vanilla` / `Apply-Patches` / `Build-Product`, автоматизиращи стъпките от `PHASE0-baseline.md` (вкл. връщане на `flutter/pubspec.lock`). Отправна точка: `scripts/Build-Baseline.ps1` (vanilla build, както CI).
+
+### Предложение: Claude Code skills + hooks (одобрено като идея, още не е направено)
+
+Собствени, малки, в git (`.claude/skills/`, `.claude/settings.json`) — без непрегледани чужди пакети (supply-chain / prompt-injection риск за инструмент за отдалечен достъп).
+
+| Какво | Тип | Кога | Защо |
+|---|---|---|---|
+| `rustdesk-build` | skill | веднага (капаните са пресни) | Build стъпките + капаните от `PHASE0-baseline.md` — новите сесии да не ги преоткриват |
+| Забрана за директни Edit/Write в `rustdesk-source/` | hook | веднага | Налага „само през патчове" (CLAUDE.md „Не пипай") вместо да разчита на памет |
+| Блок на `cargo clean` и деструктивни git команди в `rustdesk-source/` | hook | веднага | Пази `target/` кеша и чистотата на source-а |
+| `patch-workflow` | skill | с първия патч | Създаване/обновяване на патч, `git apply --check`, `{{PLACEHOLDER}}`-и, regression-surface проверка |
+| `session-handoff` | skill | Фаза 1 | В края на сесия: обнови този файл + commit |
+| `security-check` | skill | Фаза 1–2 | Чеклист срещу REQUIREMENTS (A1, N3, P1–P13) — патч да не отваря премахнат код-път |
+
+Принцип: skill е насока (може да се пропусне); това, което **не бива** да се случи, се налага с hook. Skills се обновяват заедно с pin-а на source-а.
 
 ## 4. Важни напомняния
 

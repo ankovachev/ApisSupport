@@ -53,7 +53,11 @@ ApisSupport/
 3. `flutter pub get` ПРЕДИ codegen.
 4. `python3.bat` shim (за portable packer).
 5. Уникален APP_NAME за изолация (ApisQuickSupport / ApisAgent).
-6. `VCPKG_ROOT` зададен преди build.
+6. `VCPKG_ROOT` зададен преди build — проектният `C:\src\ApisSupport\vcpkg` (gitignored, на CI baseline `9e593bb`).
+7. `VCPKG_DEFAULT_HOST_TRIPLET=x64-windows-static` при `vcpkg install` — иначе ffmpeg се пропуска тихо и `hwcodec` не линква.
+8. `flutter/pubspec.lock` се променя от `flutter pub get` (Flutter 3.24.5 downgrade-ва SDK-pinned пакети) — очаквано; Reset трябва да го връща. Ако codegen/`build_runner` падне с `Null check operator` в `PackageGraph` → върни lock-а и пусни `flutter pub get` наново.
+
+Пълни стъпки, версии и капани: [`docs/PHASE0-baseline.md`](docs/PHASE0-baseline.md). Скрипт: `scripts/Build-Baseline.ps1`.
 
 ## Заключени ключови решения
 

@@ -1,0 +1,65 @@
+diff --git a/src/lib.rs b/src/lib.rs
+index 8bc7f09..535dde5 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -452,7 +452,8 @@ pub fn init_log(_is_async: bool, _name: &str) -> Option<flexi_logger::LoggerHand
+                 path.push(_name);
+             }
+             use flexi_logger::*;
+-            if let Ok(x) = Logger::try_with_env_or_str("debug,reqwest=warn,hyper_util=warn,rustls=warn,webrtc-sctp=warn,webrtc=warn,webrtc_ice::agent::agent_internal=error,webrtc::peer_connection=error") {
++            // Apis (P13, L2): level from the product config; RUST_LOG cannot raise it.
++            if let Ok(x) = Logger::try_with_str("{{LOG_LEVEL}},reqwest=warn,hyper_util=warn,rustls=warn,webrtc-sctp=warn,webrtc=warn,webrtc_ice::agent::agent_internal=error,webrtc::peer_connection=error") {
+                 logger_holder = x
+                     .log_to_file(FileSpec::default().directory(path))
+                     .write_mode(if _is_async {
+@@ -460,7 +461,8 @@ pub fn init_log(_is_async: bool, _name: &str) -> Option<flexi_logger::LoggerHand
+                     } else {
+                         WriteMode::Direct
+                     })
+-                    .format(opt_format)
++                    // Apis (P13): addresses are masked before a line reaches the file.
++                    .format(apis_redacted_format)
+                     .rotate(
+                         // Size as well as age: rotating only daily lets one day's file grow
+                         // without limit, so whoever can drive a hot log site — a peer sending
+@@ -474,7 +476,8 @@ pub fn init_log(_is_async: bool, _name: &str) -> Option<flexi_logger::LoggerHand
+                         // (a count cannot outrun a flood; only the rate limits at the log sites
+                         // can) at the price of multiplying steady-state retention and disk for
+                         // everyone.
+-                        Cleanup::KeepLogFiles(90),
++                        // Apis (P13): short retention from the product config.
++                        Cleanup::KeepLogFiles({{LOG_RETENTION_DAYS}}),
+                     )
+                     .start()
+                     .ok();
+@@ -484,6 +487,30 @@ pub fn init_log(_is_async: bool, _name: &str) -> Option<flexi_logger::LoggerHand
+     logger_holder
+ }
+ 
++// Apis (P13): IPv4 and full-form IPv6 addresses become `<ip>`.
++#[cfg(not(debug_assertions))]
++fn apis_redacted_format(
++    w: &mut dyn std::io::Write,
++    now: &mut flexi_logger::DeferredNow,
++    record: &log::Record,
++) -> Result<(), std::io::Error> {
++    lazy_static::lazy_static! {
++        static ref IP: Option<regex::Regex> = regex::Regex::new(
++            r"\b(?:\d{1,3}\.){3}\d{1,3}\b|\b(?:[0-9a-fA-F]{1,4}:){4,7}[0-9a-fA-F]{1,4}\b",
++        )
++        .ok();
++    }
++    let mut line = Vec::new();
++    flexi_logger::opt_format(&mut line, now, record)?;
++    match IP.as_ref() {
++        Some(ip) => w.write_all(
++            ip.replace_all(&String::from_utf8_lossy(&line), "<ip>")
++                .as_bytes(),
++        ),
++        None => w.write_all(&line),
++    }
++}
++
+ #[derive(Debug, Default, Deserialize, Serialize)]
+ pub struct VersionCheckRequest {
+     #[serde(default)]

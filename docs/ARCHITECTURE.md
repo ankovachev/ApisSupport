@@ -118,7 +118,7 @@ ApisSupport/                      # ново, самостоятелно repo
 | `034-remove-block-input` | P6 | Маха block-input |
 | `035-remove-privacy-mode` | P7 | Маха privacy mode |
 | `036-disable-auto-update-telemetry` | P11 | Auto-update, telemetry, crash reports off |
-| `037-security-defaults` | P1-P4, P12, P14 | file transfer/clipboard/audio/recording/IPv6 off; remote terminal забранен |
+| `037-security-defaults` | P1-P4, P12, P14, P15 | audio/recording/terminal/remote printer/remote restart забранени (вкл. от CM); clipboard и file transfer изключени при свързване, клиентът може да ги включи за сесията от CM; IPv6 — без отделен патч (виж REQUIREMENTS) |
 | `038-logging-hardening` | P13 | Ниско ниво, кратка retention, redaction |
 
 ### 6.2 QuickSupport патчове (`quicksupport/`)

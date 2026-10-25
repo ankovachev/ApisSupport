@@ -1,0 +1,30 @@
+diff --git a/src/platform/windows.rs b/src/platform/windows.rs
+index a3c3d68..3a22374 100644
+--- a/src/platform/windows.rs
++++ b/src/platform/windows.rs
+@@ -1898,6 +1898,10 @@ pub fn toggle_blank_screen(v: bool) {
+ }
+ 
+ pub fn block_input(v: bool) -> (bool, String) {
++    // Apis (P6): also refuses when the permission is toggled on at runtime from the CM.
++    if v {
++        return (false, "Block input is disabled".to_owned());
++    }
+     let v = if v { TRUE } else { FALSE };
+     unsafe {
+         if BlockInput(v) == TRUE {
+diff --git a/src/server/connection.rs b/src/server/connection.rs
+index 4bcdf2f..caa53b7 100644
+--- a/src/server/connection.rs
++++ b/src/server/connection.rs
+@@ -2655,6 +2655,10 @@ impl Connection {
+         if enable_prefix_option == keys::OPTION_ENABLE_CAMERA {
+             return false;
+         }
++        // Apis (P6): the client's keyboard and mouse are never blocked.
++        if enable_prefix_option == keys::OPTION_ENABLE_BLOCK_INPUT {
++            return false;
++        }
+         use hbb_common::rendezvous_proto::control_permissions::Permission;
+         if let Some(control_permissions) = control_permissions {
+             let permission = match enable_prefix_option {

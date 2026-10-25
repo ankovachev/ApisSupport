@@ -29,13 +29,19 @@
 
 - Проектен vcpkg: `C:\src\ApisSupport\vcpkg` (gitignored, на CI baseline `9e593bb`).
 
-**Още няма:** написани scripts, нито един патч.
+**Фаза 1 — в ход** (2026-10-25)
+
+- Scripts: `Reset-Vanilla.ps1` (dry run без `-Force`; пази `target/`), `Apply-Patches.ps1 -Product X` (изисква vanilla source; `{{TOKEN}}` от `configs/<product>.json` + `secrets.json` в копия под `builds/patches/`; `*.hbb_common.patch` се прилагат в submodule-а), общ `Common.ps1` (pin-ът е само там).
+- Патчове: `common/001-server-config` (вграден сървър/ключ/API), `common/002-block-server-override` (N3: exe-name/`--config`/опции/записан сървър/`id@server` игнорирани).
+- Smoke тест на patched build (001+002): rendezvous mediator → нашия сървър (UDP latency + NAT отговори на 21116/21115); exe, преименуван на `rustdesk-host=evil.example.com,...`, пак ползва само нашия сървър ✅.
+- Открито: API заявката към нашия сървър пада в rustls с `InvalidCertificate(UnknownIssuer)` → проверка на сертификата/веригата (N2). Опцията `allow-insecure-tls-fallback` още не е заключена (N2).
+- Капан: `Build-Baseline.ps1` с `*>` пренасочване в PowerShell 5.1 пада (stderr на cargo → грешка при `ErrorActionPreference=Stop`); пренасочвай отвън (`powershell -File ... > log 2>&1`).
 
 ## 3. Следваща стъпка (започни оттук)
 
-**Фаза 1: `common/` патчове** (виж картата в `ARCHITECTURE.md` §6.1): server-config (от `secrets.json`), block-server-override, relay policy, force-bulgarian, light-theme, strip-rustdesk-strings, security hardening.
+**Фаза 1, продължение** (виж картата в `ARCHITECTURE.md` §6.1): `003-relay-policy` (+ заключване на `allow-insecure-tls-fallback`, N2), после force-bulgarian, light-theme, strip-rustdesk-strings, security hardening.
 
-Заедно с първите патчове — scripts `Reset-Vanilla` / `Apply-Patches` / `Build-Product`, автоматизиращи стъпките от `PHASE0-baseline.md` (вкл. връщане на `flutter/pubspec.lock`). Отправна точка: `scripts/Build-Baseline.ps1` (vanilla build, както CI).
+Още липсва `Build-Product.ps1`; дотогава build върху патчнат source = `Apply-Patches.ps1` + `Build-Baseline.ps1`.
 
 ### Claude Code skills + hooks
 

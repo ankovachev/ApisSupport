@@ -13,6 +13,21 @@ index d3e66e7..a121da3 100644
          if id.contains("@") {
              let mut v = id.split("@");
              let raw_id: &str = v.next().unwrap_or_default();
+diff --git a/src/common.rs b/src/common.rs
+index 2ed77bb..bbd9426 100644
+--- a/src/common.rs
++++ b/src/common.rs
+@@ -2307,7 +2307,10 @@ pub fn create_symmetric_key_msg(their_pk_b: [u8; 32]) -> (Bytes, Bytes, secretbo
+ }
+ 
+ #[inline]
++#[allow(unreachable_code)]
+ pub fn using_public_server() -> bool {
++    // Apis (N3): always the built-in own server; the blocked custom option must not read as public.
++    return false;
+     crate::get_custom_rendezvous_server(get_option("custom-rendezvous-server")).is_empty()
+ }
+ 
 diff --git a/src/custom_server.rs b/src/custom_server.rs
 index 3a7d60f..bed1ec4 100644
 --- a/src/custom_server.rs

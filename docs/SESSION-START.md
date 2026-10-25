@@ -46,5 +46,5 @@
 
 ## 5. Среда (напомняне)
 
-- `$env:VCPKG_ROOT = 'C:\src\ApisSupport\vcpkg'` и `$env:VCPKG_DEFAULT_HOST_TRIPLET = 'x64-windows-static'` преди build (user env `VCPKG_ROOT` още сочи към стара проба — не го ползвай).
+- `$env:VCPKG_ROOT = 'C:\src\ApisSupport\vcpkg'` и `$env:VCPKG_DEFAULT_HOST_TRIPLET = 'x64-windows-static'` преди build (user env `VCPKG_ROOT` вече сочи към проектния vcpkg; host triplet-ът се задава в build скрипта).
 - Windows / PowerShell. Build е тежък (минути) — пускай във фон при нужда.

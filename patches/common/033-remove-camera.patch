@@ -1,0 +1,50 @@
+diff --git a/libs/scrap/src/common/camera.rs b/libs/scrap/src/common/camera.rs
+index e31a37a..6ec0a3e 100644
+--- a/libs/scrap/src/common/camera.rs
++++ b/libs/scrap/src/common/camera.rs
+@@ -32,13 +32,19 @@ const CAMERA_NOT_SUPPORTED: &str = "This platform doesn't support camera yet";
+ pub struct Cameras;
+ 
+ // pre-condition
++#[allow(unreachable_code)]
+ pub fn primary_camera_exists() -> bool {
++    // Apis (P5): no camera access.
++    return false;
+     Cameras::exists(PRIMARY_CAMERA_IDX)
+ }
+ 
+ #[cfg(any(target_os = "windows", target_os = "linux"))]
+ impl Cameras {
++    #[allow(unreachable_code)]
+     pub fn all_info() -> ResultType<Vec<DisplayInfo>> {
++        // Apis (P5): cameras are never enumerated.
++        return Ok(Vec::new());
+         match query(ApiBackend::Auto) {
+             Ok(cameras) => {
+                 let mut camera_displays = SYNC_CAMERA_DISPLAYS.lock().unwrap();
+@@ -153,7 +159,10 @@ impl Cameras {
+         SYNC_CAMERA_DISPLAYS.lock().unwrap().clone()
+     }
+ 
++    #[allow(unreachable_code, unused_variables)]
+     pub fn get_capturer(current: usize) -> ResultType<Box<dyn TraitCapturer>> {
++        // Apis (P5): cameras are never opened.
++        bail!("Camera access is disabled");
+         Ok(Box::new(CameraCapturer::new(current)?))
+     }
+ }
+diff --git a/src/server/connection.rs b/src/server/connection.rs
+index 9a56a98..4bcdf2f 100644
+--- a/src/server/connection.rs
++++ b/src/server/connection.rs
+@@ -2651,6 +2651,10 @@ impl Connection {
+         if enable_prefix_option == keys::OPTION_ENABLE_TUNNEL {
+             return false;
+         }
++        // Apis (P5): camera viewing is never permitted.
++        if enable_prefix_option == keys::OPTION_ENABLE_CAMERA {
++            return false;
++        }
+         use hbb_common::rendezvous_proto::control_permissions::Permission;
+         if let Some(control_permissions) = control_permissions {
+             let permission = match enable_prefix_option {

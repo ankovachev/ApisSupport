@@ -25,18 +25,17 @@
 - Source pin: RustDesk **1.5.0** (`fada664`) + hbb_common `229b9045`, клониран в `rustdesk-source/` (gitignored).
 - Тайни: адрес на сървъра + публичен ключ са САМО в `configs/secrets.json` (gitignored, локално) — НЕ в repo-то. Шаблон: `configs/secrets.example.json`.
 
-**Още няма:** написани scripts, нито един патч, нито baseline build.
+**Baseline build — успешен ✅** (2026-10-25) — виж [`docs/PHASE0-baseline.md`](PHASE0-baseline.md): toolchain, точни стъпки, капани, smoke тест.
+
+- Проектен vcpkg: `C:\src\ApisSupport\vcpkg` (gitignored, на CI baseline `9e593bb`).
+
+**Още няма:** написани scripts, нито един патч.
 
 ## 3. Следваща стъпка (започни оттук)
 
-**Baseline build на vanilla RustDesk 1.5.0** — преди какъвто и да е патч, за да потвърдим, че средата компилира чисто.
+**Фаза 1: `common/` патчове** (виж картата в `ARCHITECTURE.md` §6.1): server-config (от `secrets.json`), block-server-override, relay policy, force-bulgarian, light-theme, strip-rustdesk-strings, security hardening.
 
-1. Провери toolchain: Rust, Flutter, CMake, Python, `flutter_rust_bridge_codegen`, `VCPKG_ROOT`.
-2. Build на `rustdesk-source/` без промени (спазвай 6-те build предпоставки от `CLAUDE.md`).
-3. Smoke: стартира ли, UI се ли показва (vanilla, без branding — очаквано).
-4. Запиши резултата в `docs/PHASE0-baseline.md` + commit.
-
-След успешен baseline → **Фаза 1: `common/` патчове** (виж картата в `ARCHITECTURE.md` §6.1): server-config (от `secrets.json`), block-server-override, relay policy, force-bulgarian, light-theme, strip-rustdesk-strings, security hardening.
+Заедно с първите патчове — scripts `Reset-Vanilla` / `Apply-Patches` / `Build-Product`, автоматизиращи стъпките от `PHASE0-baseline.md` (вкл. връщане на `flutter/pubspec.lock`).
 
 ## 4. Важни напомняния
 
@@ -47,5 +46,5 @@
 
 ## 5. Среда (напомняне)
 
-- `$env:VCPKG_ROOT` трябва да е зададен преди build.
+- `$env:VCPKG_ROOT = 'C:\src\ApisSupport\vcpkg'` и `$env:VCPKG_DEFAULT_HOST_TRIPLET = 'x64-windows-static'` преди build (user env `VCPKG_ROOT` още сочи към стара проба — не го ползвай).
 - Windows / PowerShell. Build е тежък (минути) — пускай във фон при нужда.

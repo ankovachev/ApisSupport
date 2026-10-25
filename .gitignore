@@ -4,6 +4,9 @@
 # Чист RustDesk source (възстановява се от pin, не се проследява тук)
 /rustdesk-source/
 
+# Project-local vcpkg (pinned to RustDesk CI baseline, built locally)
+/vcpkg/
+
 # Тайни стойности (адрес на сървъра + публичен ключ) — само локално, не в repo
 /configs/secrets.json
 

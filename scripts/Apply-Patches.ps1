@@ -56,20 +56,27 @@ $staging = Join-Path $RepoRoot "builds\patches\$Product"
 if (Test-Path $staging) { Remove-Item $staging -Recurse -Force }
 New-Item -ItemType Directory $staging | Out-Null
 
+# Stage and validate every patch before touching the source.
 $utf8NoBom = New-Object System.Text.UTF8Encoding $false
-foreach ($p in $patches) {
+$staged = foreach ($p in $patches) {
     $text = [IO.File]::ReadAllText($p.FullName)
     foreach ($t in $tokens.GetEnumerator()) { $text = $text.Replace("{{$($t.Key)}}", $t.Value) }
     $unresolved = [regex]::Matches($text, '\{\{[A-Z0-9_]+\}\}') | ForEach-Object Value | Sort-Object -Unique
     if ($unresolved) { throw "$($p.Directory.Name)/$($p.Name): unknown token(s) $($unresolved -join ', ')" }
 
-    $target = if ($p.Name -like '*.hbb_common.patch') { $HbbCommon } else { $Source }
     $out = Join-Path $staging "$($p.Directory.Name)-$($p.Name)"
     [IO.File]::WriteAllText($out, $text, $utf8NoBom)
+    [pscustomobject]@{
+        Name   = "$($p.Directory.Name)/$($p.Name)"
+        Path   = $out
+        Target = if ($p.Name -like '*.hbb_common.patch') { $HbbCommon } else { $Source }
+    }
+}
 
-    Write-Host "=== $($p.Directory.Name)/$($p.Name)" -ForegroundColor Cyan
-    Invoke-Git $target apply --check $out | Out-Null
-    Invoke-Git $target apply $out | Out-Null
+foreach ($s in $staged) {
+    Write-Host "=== $($s.Name)" -ForegroundColor Cyan
+    Invoke-Git $s.Target apply --check $s.Path | Out-Null
+    Invoke-Git $s.Target apply $s.Path | Out-Null
 }
 
 $newFiles = Join-Path $RepoRoot 'patches\new-files'

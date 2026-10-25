@@ -1,0 +1,13 @@
+diff --git a/src/common.rs b/src/common.rs
+index 0d46baf..2ed77bb 100644
+--- a/src/common.rs
++++ b/src/common.rs
+@@ -1159,7 +1159,7 @@ fn get_api_server_(api: String, custom: String) -> String {
+             return format!("http://{}", s);
+         }
+     }
+-    "https://admin.rustdesk.com".to_owned()
++    "{{API_SERVER}}".to_owned()
+ }
+ 
+ #[inline]

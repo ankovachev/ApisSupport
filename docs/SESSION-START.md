@@ -9,83 +9,93 @@
 ## 1. Ред за четене (задължително, в този ред)
 
 1. [`CLAUDE.md`](../CLAUDE.md) — контекст, pin, build предпоставки, „не пипай".
-2. [`REQUIREMENTS.md`](../REQUIREMENTS.md) — заключени изисквания (v1.1). Канон.
-3. [`docs/ARCHITECTURE.md`](ARCHITECTURE.md) — архитектура + карта изискване→патч, фази (v0.2). Канон.
-4. Този файл — текущо състояние и следваща стъпка.
+2. [`REQUIREMENTS.md`](../REQUIREMENTS.md) — заключени изисквания (v1.1 + P14/P15 и уточнения от 2026-10-25). Канон.
+3. [`docs/ARCHITECTURE.md`](ARCHITECTURE.md) — архитектура + карта изискване→патч, фази. Канон.
+4. [`docs/PHASE1-common.md`](PHASE1-common.md) — какво е направено във Фаза 1: инструменти, патчове, решения, сървърни промени, рецепти за проверка, отворени точки.
+5. Този файл — текущо състояние и следваща стъпка.
 
 Каноничните docs надделяват над всяко устно допускане.
 
-## 2. Къде сме (към 2026-10-25)
+## 2. Къде сме (към 2026-10-25, вечер)
 
-**Фаза 0 (setup) — завършена ✅**
+| Фаза | Състояние | Детайли |
+|---|---|---|
+| 0 — setup + vanilla baseline | ✅ | [`PHASE0-baseline.md`](PHASE0-baseline.md) |
+| 1 — общи патчове (`patches/common/`) | ✅ | [`PHASE1-common.md`](PHASE1-common.md) |
+| 2 — QuickSupport патчове | ⏭ следваща | §3 по-долу |
+| 3–7 | предстоят | `ARCHITECTURE.md` §8 |
 
-- Самостоятелно git repo `C:\src\ApisSupport`, публично на https://github.com/ankovachev/ApisSupport (AGPL-3.0), `main` в синхрон с `origin/main`.
-- Скелет: `docs/ configs/ patches/{common,quicksupport,agent,new-files}/ scripts/ assets/ builds/`.
-- Конфиги: `configs/quicksupport.json`, `configs/agent.json` (попълнени по изискванията).
-- Source pin: RustDesk **1.5.0** (`fada664`) + hbb_common `229b9045`, клониран в `rustdesk-source/` (gitignored).
-- Тайни: адрес на сървъра + публичен ключ са САМО в `configs/secrets.json` (gitignored, локално) — НЕ в repo-то. Шаблон: `configs/secrets.example.json`.
+- **Repo:** `main` = `origin/main` (https://github.com/ankovachev/ApisSupport), последен commit `d23e1f4`. Нищо незаписано.
+- **Source:** `rustdesk-source/` чист, на pin-а (RustDesk 1.5.0 `fada664` + hbb_common `229b9045`). `target/` кешът е топъл (incremental `cargo check` ~11 s, build ~5–7 мин).
+- **Готово във Фаза 1:** scripts `Reset-Vanilla` / `Apply-Patches` / `Common`; 14 общи патча (001–003, 010, 011, 020, 030, 031, 033–038; 032 не е нужен). Приложението говори само с нашия сървър, на български, светла тема, без „RustDesk“ в текстовете, без LAN discovery / direct IP / tunneling / WebRTC / proxy / update check, с отказани опасни права и минимален лог.
+- **Сървър:** поправени веригата на TLS сертификата, правата на частния ключ и дублираният nginx config (виж `PHASE1-common.md` §4).
+- **Нови изисквания:** P14 (remote terminal — забранен), P15 (remote restart — забранен); уточнени P1–P4 и P12.
 
-**Baseline build — успешен ✅** (2026-10-25) — виж [`docs/PHASE0-baseline.md`](PHASE0-baseline.md): toolchain, точни стъпки, капани, smoke тест.
+## 3. Следваща стъпка — план за следващата сесия
 
-- Проектен vcpkg: `C:\src\ApisSupport\vcpkg` (gitignored, на CI baseline `9e593bb`).
+### 3.1 Старт (5 мин)
 
-**Фаза 1 — в ход** (2026-10-25)
+1. Отвори сесията в `C:\src\ApisSupport` (иначе guard hook-ът не е активен).
+2. Прочети файловете от §1.
+3. Провери състоянието:
+   ```powershell
+   git status -sb
+   .\scripts\Reset-Vanilla.ps1        # трябва да каже "Already vanilla."
+   ```
+4. **Преди първия тест с build:** архивирай `%APPDATA%\RustDesk` (докато няма `001-app-name`, build-ът пише там) и го възстанови след теста. Копието от предишната сесия не е запазено.
 
-- Scripts: `Reset-Vanilla.ps1` (dry run без `-Force`; пази `target/`), `Apply-Patches.ps1 -Product X` (изисква vanilla source; `{{TOKEN}}` от `configs/<product>.json` + `secrets.json` в копия под `builds/patches/`; `*.hbb_common.patch` се прилагат в submodule-а), общ `Common.ps1` (pin-ът е само там).
-- Патчове: `common/001-server-config` (вграден сървър/ключ/API), `common/002-block-server-override` (N3: exe-name/`--config`/опции/записан сървър/`id@server` игнорирани).
-- Smoke тест на patched build (001+002): rendezvous mediator → нашия сървър (UDP latency + NAT отговори на 21116/21115); exe, преименуван на `rustdesk-host=evil.example.com,...`, пак ползва само нашия сървър ✅.
-- `common/003-relay-policy`: без proxy (`get/set_socks`, `get_network_type`), `allow-insecure-tls-fallback` винаги изключено (N2), WebRTC изключен структурно (`WebRTCStream::new` → грешка; клиентът иначе отговаря на WebRTC оферти независимо от `enable-webrtc` и ползва публични STUN), без IPv6 STUN проба. P2P = TCP hole punching + relay само през нашия сървър (relay идва от сървъра, override-ът е блокиран в 002). Smoke тест: STUN заявките изчезнаха, няма TCP към чужди адреси ✅.
-- `common/010-force-bulgarian`: `resolve_lang` → винаги `bg` (записан `lang`, системен locale и езикът от другата страна се игнорират); `locale: Locale('bg')` в двата `GetMaterialApp`; махната карта „Language“ от общите настройки. Визуално потвърдено от потребителя на en-US Windows без записан език ✅. Забележка: снимка на прозореца от shell-а излиза празна (Flutter/GPU) — визуалните проверки ги прави потребителят.
-- `common/011-light-theme-forced`: `MyTheme.getThemeModePreference()` → винаги light; `changeDarkMode()` форсира light (настройки, broadcast между прозорците, CM); махната карта „Theme“. Визуално потвърдено със записано `theme = 'dark'` ✅.
-- Поправка в 002: `using_public_server()` → винаги `false`. Блокираната опция `custom-rendezvous-server` е винаги празна и приложението се мислеше за публичния сървър на RustDesk (линк „направете свой собствен сървър“, ограничено FPS/качество при relay, по-рядка проверка на онлайн статус, backoff при регистрация). Визуално потвърдено ✅.
-- `common/020-strip-rustdesk-strings`: „RustDesk“ във всички преводи → `{{DISPLAY_NAME}}` (видимото име по продукт); заглавие на прозореца и текстът до логото в таба → `{{WINDOW_TITLE}}`; „Powered by RustDesk“ махнат. `Apply-Patches.ps1`: нови token-и `DISPLAY_NAME`/`WINDOW_TITLE` + отказ на стойности с кавички/`\`/нов ред (отиват в низове в кода). Визуално потвърдено ✅. Остават линкове към rustdesk.com в скрити/по-късни места (about/privacy в настройките → 007, install page → QS, update → 036); иконата → branding (B1).
-- `common/030-remove-lan-discovery`: `lan::start_listening` (UDP 21119, отговаряше с ID/hostname/user/MAC), `ui_interface::discover` (broadcast) и `lan::send_wol` → ранен return; табът „Открити“ скрит. Проверено: няма UDP 21119 и TCP listener-и, табът липсва ✅.
-- `common/031-remove-direct-ip-tunneling`: клиентът отказва ID във вид IP / `домейн:порт` („Direct IP access is disabled“); `direct_server` (TCP 21118) не тръгва; `Connection::permission()` винаги отказва `enable-tunnel` (TCP tunneling и RDP); `port_forward::listen` не отваря локален listener. Проверено: `127.0.0.1` → грешка, няма TCP listener-и ✅. Tunneling-ът е непроверен с 2 машини (Фаза 4). Отворено: менютата „TCP tunneling“/„RDP“ и „Terminal“ още се виждат в UI-а (агент) — за почистване на UI-а на агента; новите съобщения за грешка са на английски (превод → 020/bg). Remote terminal → забранен (P14, добавен в REQUIREMENTS), отива в `037-security-defaults`.
-- `032-remove-plugin-system`: **не е нужен** — plugin системата липсва в 1.5.0; само фиксирани DLL-и от папката на приложението + системни. Remote printer (`printer_driver_adapter.dll`) → за 037 (канал за данни като P1).
-- `common/033-remove-camera`: `Connection::permission()` винаги отказва `enable-camera` (login „View camera“ → „No permission of viewing camera“); в `libs/scrap` `primary_camera_exists()` → false, `Cameras::all_info()` → празно, `get_capturer()` → грешка (камерите не се изброяват и не се отварят). `cargo check` ✅; runtime непроверен (изисква 2 машини → Фаза 4).
-- `common/034-remove-block-input`: `Connection::permission()` винаги отказва `enable-block-input`; `platform::windows::block_input(true)` винаги връща грешка (защото клиентът може да включи правото по време на сесия от CM; изключването минава). `cargo check` ✅; runtime → Фаза 4. Превключвателят в CM ще се скрие с consent UI-а (Фаза 2).
-- `common/035-remove-privacy-mode`: `Connection::permission()` винаги отказва `enable-privacy-mode`; `privacy_mode::is_privacy_mode_supported()` → false (съобщава се на контролиращия; двата пътя за включване в `connection.rs` го проверяват → покрива и включване от CM по време на сесия); `turn_on_privacy()` → грешка. `toggle_blank_screen` няма извиквания в 1.5.0 → не се пипа (да се провери при upgrade). `cargo check` ✅; runtime → Фаза 4.
-- `common/036-disable-auto-update-telemetry`: `do_check_software_update()` → ранен `Ok(())` (единствената връзка към `api.rustdesk.com`; през нея минават и ръчната проверка, и auto-update нишката). Telemetry/crash reports към трети страни няма в 1.5.0; `sysinfo`/heartbeat отиват само към нашия API сървър (N1) — оставени. Проверено: за 40 s DNS кешът съдържа **само нашия сървър** (нито rustdesk.com, нито STUN, нито друго) ✅.
-- `common/037-security-defaults`: `Connection::permission()` винаги отказва audio, recording, terminal (P14), remote printer, remote restart (P15); clipboard и file transfer → изключени при свързване. CM превключвателят (`SwitchPermission`) не може да включи audio/recording/restart/block_input/privacy_mode (връща CM в „изключено“); clipboard/file — може (решение на потребителя: per-session). Отделен прозорец „Прехвърляне на файлове“ → отказан при login; файлове само копиране през clipboard в сесия, ако клиентът ги включи. P12 (IPv6) покрит от 031/003 — без код. `cargo check` ✅; runtime → Фаза 4.
-- `common/038-logging-hardening` (`hbb_common`): ниво `{{LOG_LEVEL}}` (warn) с `try_with_str` — `RUST_LOG` не може да го вдигне (L2); retention `{{LOG_RETENTION_DAYS}}` (7) файла вместо 90; IPv4/IPv6 адресите → `<ip>` (собствен format около `opt_format`). `Apply-Patches.ps1`: token-и `LOG_LEVEL`/`LOG_RETENTION_DAYS` с валидация. Проверено на release build с `RUST_LOG=trace`: в лога само 4 реда (WARN/ERROR), 0 IP адреса ✅. Шум: „Failed to load lan peers“ (ERROR) — UI-ът още чете LAN списъка; за почистване.
-- **Фаза 1 (common/) — завършена ✅** (2026-10-25).
-- Видяно, за Фаза 2: UAC/„Инсталирай“ банер (F1/F2), connect панел, еднократна парола (A3).
-- Сървър (2026-10-25): nginx подаваше само крайния сертификат → rustls даваше `InvalidCertificate(UnknownIssuer)`. Поправено на сървъра: `/etc/nginx/ssl/apis.crt` = краен + Sectigo DV R36 (копие `apis.crt.bak-2026-10-25`); `apis.key` → `600`. Отвън `Verify return code: 0`, грешката изчезна от лога ✅. Дублираните server блокове за сайта (в `sites-available/default` и `<сайт>`) са обединени в `sites-available/<сайт>` (вкл. `location /api/` → `127.0.0.1:8001`, който липсваше там); `default` = само catch-all. Копие: `/root/nginx-backup-2026-10-25/`. `nginx -t` без предупреждения, `/api/` пак стига до бекенда ✅.
-- Капан: `Build-Baseline.ps1` с `*>` пренасочване в PowerShell 5.1 пада (stderr на cargo → грешка при `ErrorActionPreference=Stop`); пренасочвай отвън (`powershell -File ... > log 2>&1`).
+### 3.2 Фаза 2 — QuickSupport патчове (`patches/quicksupport/`)
 
-## 3. Следваща стъпка (започни оттук)
+Ред (карта: `ARCHITECTURE.md` §6.2):
 
-**Фаза 2: QuickSupport патчове** (виж картата в `ARCHITECTURE.md` §6.2): `quicksupport/001-app-name` (C1, изолация от инсталиран RustDesk — след него тестовете вече не пипат `%APPDATA%\RustDesk`), после 002-disable-unattended (A1), 003-consent-access-level (A2/A9), 004-no-connection-password (A3), 005-connection-limits, 006-session-indicator, 007-hide-all-settings, 008-close-equals-exit. Отворени от Фаза 1: UAC/„Инсталирай“ банер, connect панел и еднократна парола в QS; менюта TCP tunneling/RDP/Terminal/View camera в агента; превод на новите съобщения за грешка; `Build-Product.ps1`; E2E тест с 2 машини за 031/033/034/035/037. После Фаза 2 (QuickSupport патчове).
-
-Още липсва `Build-Product.ps1`; дотогава build върху патчнат source = `Apply-Patches.ps1` + `Build-Baseline.ps1`.
-
-### Claude Code skills + hooks
-
-**Направени (2026-10-25):** skill `rustdesk-build` (`.claude/skills/rustdesk-build/`) и guard hook (`.claude/settings.json` → `.claude/hooks/guard-rustdesk-source.ps1`): Edit/Write в `rustdesk-source/` → **deny**; `cargo clean` и деструктивни git команди към `rustdesk-source/` → **ask**. Важат само за сесии, отворени в `C:\src\ApisSupport` (не в `C:\src`). Ограничение: hook-ът не вижда запис във файл през shell (напр. `Set-Content`) и git команди вътре в скриптове — скриптовете са одобреният път.
-
-Пълният план:
-
-Собствени, малки, в git (`.claude/skills/`, `.claude/settings.json`) — без непрегледани чужди пакети (supply-chain / prompt-injection риск за инструмент за отдалечен достъп).
-
-| Какво | Тип | Кога | Защо |
+| # | Патч | Изисквания | Бележки за старта |
 |---|---|---|---|
-| `rustdesk-build` | skill | веднага (капаните са пресни) | Build стъпките + капаните от `PHASE0-baseline.md` — новите сесии да не ги преоткриват |
-| Забрана за директни Edit/Write в `rustdesk-source/` | hook | веднага | Налага „само през патчове" (CLAUDE.md „Не пипай") вместо да разчита на памет |
-| Блок на `cargo clean` и деструктивни git команди в `rustdesk-source/` | hook | веднага | Пази `target/` кеша и чистотата на source-а |
-| `patch-workflow` | skill | с първия патч | Създаване/обновяване на патч, `git apply --check`, `{{PLACEHOLDER}}`-и, regression-surface проверка |
-| `session-handoff` | skill | Фаза 1 | В края на сесия: обнови този файл + commit |
-| `security-check` | skill | Фаза 1–2 | Чеклист срещу REQUIREMENTS (A1, N3, P1–P13) — патч да не отваря премахнат код-път |
+| 1 | `001-app-name` | C1 | **Първи**, защото изолира от инсталиран RustDesk (`%APPDATA%\ApisQuickSupport`, IPC pipe, mutex) и спира нуждата от архив на `%APPDATA%\RustDesk`. Да се картографира: `hbb_common::config::APP_NAME` (сега `"RustDesk"`), името на exe/runner във `flutter/windows/` и `build.py`, и **страничните ефекти на `is_custom_client()`** (става `true`, щом APP_NAME ≠ „RustDesk“ — upstream включва „custom client“ поведения). Token `{{APP_NAME}}` вече съществува. |
+| 2 | `002-disable-unattended` | A1 | Структурно: permanent password / unattended код-пътят изцяло. Най-важният security патч (`ARCHITECTURE.md` §9). |
+| 3 | `003-consent-access-level` | A2, A9 | Popup Приеми/Откажи + „Само гледане“ / „Пълен контрол“. Upstream има опция `access-mode` (`full`/`view`) в `is_permission_enabled_locally` — отправна точка. Тук може да се реши и file transfer прозорецът (P1). |
+| 4 | `004-no-connection-password` | A3 | Без еднократна/постоянна парола в UI и в проверката. |
+| 5 | `005-connection-limits` | A4–A7 | Timeout 60 s, idle 15 мин, max 2 връзки, rate limit (да се свери с upstream anti-bruteforce). |
+| 6 | `006-session-indicator` | A8 | Видима индикация + прекратяване. |
+| 7 | `007-hide-all-settings` | L1–L3 | Вкл. превключвателите в CM за block-input/privacy и др.; about/privacy линковете към rustdesk.com. |
+| 8 | `008-close-equals-exit` | F3 | Затваряне = край на процеса (без tray). |
 
-Принцип: skill е насока (може да се пропусне); това, което **не бива** да се случи, се налага с hook. Skills се обновяват заедно с pin-а на source-а.
+Плюс отворените UI точки за QuickSupport от `PHASE1-common.md` §6: UAC/„Инсталирай“ банер (F1/F2), панел „Отдалечено управление“ и история на сесиите (QS е само контролиран).
 
-## 4. Важни напомняния
+### 3.3 Работен цикъл за всеки патч (както във Фаза 1)
+
+Картографиране → генериране от копия на pin-а (с предходните патчове, които пипат същите файлове) → `Apply-Patches` за двата продукта → `cargo check` (14 предупреждения от upstream, без нови) → build + проверка (мрежа/лог; визуално — от потребителя) → `Reset-Vanilla -Force` → docs + commit → secret scan → push след одобрение. Подробно: `PHASE1-common.md` §1 и §5.
+
+### 3.4 Може да се направи паралелно / по-късно
+
+- `scripts/Build-Product.ps1` (Reset → Apply → Build, вкл. връщане на `pubspec.lock` и външно пренасочване на изхода).
+- Skill `patch-workflow` (процесът от §3.3 е вече установен — може да се опише като skill).
+- Превод на новите съобщения за грешка; скриване на менютата TCP tunneling/RDP/Terminal/View camera в агента (Фаза 5).
+
+## 4. Claude Code skills + hooks
+
+**Направени (2026-10-25):** skill `rustdesk-build` (`.claude/skills/rustdesk-build/`) и guard hook (`.claude/settings.json` → `.claude/hooks/guard-rustdesk-source.ps1`): Edit/Write в `rustdesk-source/` → **deny**; `cargo clean` и деструктивни git команди към `rustdesk-source/` → **ask**. Важат само за сесии, отворени в `C:\src\ApisSupport`. Ограничение: hook-ът не вижда запис във файл през shell и git команди вътре в скриптове — скриптовете са одобреният път.
+
+Собствени, малки, в git — без непрегледани чужди пакети (supply-chain / prompt-injection риск за инструмент за отдалечен достъп).
+
+| Какво | Тип | Състояние | Защо |
+|---|---|---|---|
+| `rustdesk-build` | skill | ✅ | Build стъпките + капаните от `PHASE0-baseline.md` |
+| Забрана за директни Edit/Write в `rustdesk-source/` | hook | ✅ | Налага „само през патчове" |
+| Блок на `cargo clean` и деструктивни git команди в `rustdesk-source/` | hook | ✅ | Пази `target/` кеша и чистотата на source-а |
+| `patch-workflow` | skill | предстои | Процесът от §3.3 |
+| `session-handoff` | skill | предстои | В края на сесия: обнови този файл + commit |
+| `security-check` | skill | предстои | Чеклист срещу REQUIREMENTS (A1, N3, P1–P15) — патч да не отваря премахнат код-път |
+
+Принцип: skill е насока (може да се пропусне); това, което **не бива** да се случи, се налага с hook.
+
+## 5. Важни напомняния
 
 - `rustdesk-source/` се пипа САМО през патчове; `rustdesk-source/target/` е кеш — без `cargo clean` без одобрение.
-- Тайните (сървър/ключ) не влизат в repo — винаги през `secrets.json`.
-- Commit след всяка успешна стъпка (restore точки). UI текстове на български; код/commits на английски.
+- Тайните (сървър/ключ) не влизат в repo — винаги през `secrets.json`; в docs и отговори адресът се маскира.
+- Commit след всяка успешна стъпка (restore точки); push — след одобрение. UI текстове на български; код/commits на английски.
 - Проектът е легитимен (виж `REQUIREMENTS.md` раздели 0 и 10): поддръжка със съгласие, без unattended. Формулирай работата конкретно и технически.
 
-## 5. Среда (напомняне)
+## 6. Среда (напомняне)
 
-- `$env:VCPKG_ROOT = 'C:\src\ApisSupport\vcpkg'` и `$env:VCPKG_DEFAULT_HOST_TRIPLET = 'x64-windows-static'` преди build (user env `VCPKG_ROOT` вече сочи към проектния vcpkg; host triplet-ът се задава в build скрипта).
-- Windows / PowerShell. Build е тежък (минути) — пускай във фон при нужда.
+- `$env:VCPKG_ROOT = 'C:\src\ApisSupport\vcpkg'`, `$env:VCPKG_DEFAULT_HOST_TRIPLET = 'x64-windows-static'`, `$env:LIBCLANG_PATH = 'C:\Program Files\LLVM\bin'` (build скриптът ги задава сам).
+- Windows / PowerShell 5.1. Build е тежък (минути) — пускай във фон, с пренасочване на изхода **отвън** (`powershell -File ... > log 2>&1`).

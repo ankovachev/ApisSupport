@@ -37,7 +37,11 @@
 
 Заедно с първите патчове — scripts `Reset-Vanilla` / `Apply-Patches` / `Build-Product`, автоматизиращи стъпките от `PHASE0-baseline.md` (вкл. връщане на `flutter/pubspec.lock`). Отправна точка: `scripts/Build-Baseline.ps1` (vanilla build, както CI).
 
-### Предложение: Claude Code skills + hooks (одобрено като идея, още не е направено)
+### Claude Code skills + hooks
+
+**Направени (2026-10-25):** skill `rustdesk-build` (`.claude/skills/rustdesk-build/`) и guard hook (`.claude/settings.json` → `.claude/hooks/guard-rustdesk-source.ps1`): Edit/Write в `rustdesk-source/` → **deny**; `cargo clean` и деструктивни git команди към `rustdesk-source/` → **ask**. Важат само за сесии, отворени в `C:\src\ApisSupport` (не в `C:\src`). Ограничение: hook-ът не вижда запис във файл през shell (напр. `Set-Content`) и git команди вътре в скриптове — скриптовете са одобреният път.
+
+Пълният план:
 
 Собствени, малки, в git (`.claude/skills/`, `.claude/settings.json`) — без непрегледани чужди пакети (supply-chain / prompt-injection риск за инструмент за отдалечен достъп).
 

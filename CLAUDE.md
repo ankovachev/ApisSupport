@@ -75,6 +75,8 @@ ApisSupport/
 - `rustdesk-source/target/` build кеш — без `cargo clean` без изрично одобрение.
 - Деструктивни git операции върху `rustdesk-source/` без потвърждение.
 
+Горните правила се налагат от hook (`.claude/settings.json`) — отваряй сесиите в `C:\src\ApisSupport`, за да е активен. Build процедурата: skill `rustdesk-build`.
+
 ## Работен стил
 
 1. Каноничните docs надделяват над допускания.

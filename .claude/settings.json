@@ -1,0 +1,18 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit|Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-rustdesk-source.ps1\"",
+            "timeout": 15,
+            "onFailure": "block",
+            "statusMessage": "Checking rustdesk-source guard"
+          }
+        ]
+      }
+    ]
+  }
+}

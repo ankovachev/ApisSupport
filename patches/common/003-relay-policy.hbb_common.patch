@@ -1,0 +1,67 @@
+diff --git a/src/config.rs b/src/config.rs
+index 7aa3f59..96e35f6 100644
+--- a/src/config.rs
++++ b/src/config.rs
+@@ -1501,7 +1501,10 @@ impl Config {
+         salt
+     }
+ 
++    #[allow(unreachable_code, unused_variables)]
+     pub fn set_socks(socks: Option<Socks5Server>) {
++        // Apis (N1/N4): no proxy; connections always go directly to the built-in server.
++        return;
+         if OVERWRITE_SETTINGS
+             .read()
+             .unwrap()
+@@ -1565,7 +1568,10 @@ impl Config {
+         })
+     }
+ 
++    #[allow(unreachable_code)]
+     pub fn get_socks() -> Option<Socks5Server> {
++        // Apis (N1/N4): no proxy.
++        return None;
+         Self::get_socks_from_custom_client_advanced_settings(&OVERWRITE_SETTINGS.read().unwrap())
+             .or(CONFIG2.read().unwrap().socks.clone())
+             .or(Self::get_socks_from_custom_client_advanced_settings(
+@@ -1578,7 +1584,10 @@ impl Config {
+         Self::get_network_type() != NetworkType::Direct
+     }
+ 
++    #[allow(unreachable_code)]
+     pub fn get_network_type() -> NetworkType {
++        // Apis (N1/N4): no proxy.
++        return NetworkType::Direct;
+         if OVERWRITE_SETTINGS
+             .read()
+             .unwrap()
+@@ -2873,7 +2882,10 @@ pub fn use_ws() -> bool {
+     option2bool(option, &Config::get_option(option))
+ }
+ 
++#[allow(unreachable_code)]
+ pub fn allow_insecure_tls_fallback() -> bool {
++    // Apis (N2): server certificates are always verified.
++    return false;
+     let option = keys::OPTION_ALLOW_INSECURE_TLS_FALLBACK;
+     option2bool(option, &Config::get_option(option))
+ }
+diff --git a/src/webrtc.rs b/src/webrtc.rs
+index f33f914..9e1f2ba 100644
+--- a/src/webrtc.rs
++++ b/src/webrtc.rs
+@@ -569,11 +569,14 @@ impl WebRTCStream {
+     /// belong to a runtime that outlives the session (see `WEBRTC_RT`). A caller that abandons
+     /// this future mid-await leaves the setup task to finish there; the abandoned result then
+     /// closes a freshly built pc (and leaves a shared cache hit alone) — see `NewStreamHandoff`.
++    #[allow(unreachable_code, unused_variables)]
+     pub async fn new(
+         remote_endpoint: &str,
+         force_relay: bool,
+         ms_timeout: u64,
+     ) -> ResultType<Self> {
++        // Apis (N1/N4): WebRTC is disabled; its ICE uses public STUN servers and configurable TURN.
++        return Err(anyhow::anyhow!("WebRTC is disabled"));
+         let Some(rt) = WEBRTC_RT.as_ref() else {
+             return Err(anyhow::anyhow!("WebRTC I/O runtime unavailable"));
+         };

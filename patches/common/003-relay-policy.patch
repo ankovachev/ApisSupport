@@ -1,0 +1,26 @@
+diff --git a/src/common.rs b/src/common.rs
+index 2ed77bb..35f1943 100644
+--- a/src/common.rs
++++ b/src/common.rs
+@@ -1196,7 +1196,10 @@ pub fn get_ipv6_punch_enabled() -> bool {
+     )
+ }
+ 
++#[allow(unreachable_code)]
+ pub fn get_webrtc_enabled() -> bool {
++    // Apis (N1/N4): WebRTC is disabled.
++    return false;
+     config::option2bool(
+         keys::OPTION_ENABLE_WEBRTC,
+         &get_local_option(keys::OPTION_ENABLE_WEBRTC),
+@@ -2650,7 +2653,10 @@ async fn test_bind_ipv6() -> ResultType<SocketAddr> {
+     Ok(socket.local_addr()?)
+ }
+ 
++#[allow(unreachable_code)]
+ pub async fn test_ipv6() -> Option<tokio::task::JoinHandle<()>> {
++    // Apis (N1/P12): no probes to public STUN servers.
++    return None;
+     {
+         // One look and one claim of the minute, under one lock: two connections arriving
+         // together would otherwise both find it over and both probe.

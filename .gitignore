@@ -1,0 +1,15 @@
+# Изход от build
+/builds/
+
+# Чист RustDesk source (възстановява се от pin, не се проследява тук)
+/rustdesk-source/
+
+# Тайни стойности (адрес на сървъра + публичен ключ) — само локално, не в repo
+/configs/secrets.json
+
+# OS / редактор
+Thumbs.db
+.DS_Store
+.vscode/
+*.swp
+*.user

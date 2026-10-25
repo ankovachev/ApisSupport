@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "product": "quicksupport",
+  "role": "controlled",
+  "branding": {
+    "app_name": "ApisQuickSupport",
+    "display_name": "АПИС Дистанционна Поддръжка",
+    "executable_name": "ApisQuickSupport.exe",
+    "window_title": "АПИС Европа АД",
+    "header_line1": "АПИС Европа АД",
+    "header_subtitle": "Система за дистанционна помощ",
+    "company": "АПИС Европа АД"
+  },
+  "server": {
+    "_comment": "rendezvous/api/public_key идват от configs/secrets.json (gitignored) при build; не се пазят в repo.",
+    "allow_server_override": false,
+    "relay_fallback": true
+  },
+  "language": { "default": "bg", "allow_user_change": false, "show_picker_on_first_run": false },
+  "theme": { "mode": "light", "allow_user_change": false },
+  "ui": {
+    "tray_enabled": false,
+    "close_behavior": "exit",
+    "show_id_prominently": true,
+    "show_terms_of_use": true,
+    "hide_all_settings": true,
+    "show_connect_panel": false
+  },
+  "access": {
+    "unattended_access": false,
+    "connection_password": false,
+    "require_explicit_consent": true,
+    "consent_access_levels": ["view_only", "full_control"],
+    "max_simultaneous_connections": 2,
+    "connection_prompt_timeout_seconds": 60,
+    "idle_disconnect_minutes": 15,
+    "max_failed_attempts_per_minute": 3
+  },
+  "features": {
+    "file_transfer_enabled": false,
+    "drag_drop_enabled": false,
+    "clipboard_sync_default": false,
+    "audio_capture_default": false,
+    "recording": false,
+    "camera": false,
+    "block_input": false,
+    "privacy_mode": false,
+    "plugin_system": false
+  },
+  "security": {
+    "lan_discovery": false,
+    "direct_ip_connection": false,
+    "tcp_tunneling": false,
+    "auto_accept_connections": false,
+    "auto_update": false,
+    "telemetry": false,
+    "crash_reports": false,
+    "ipv6_listening": false
+  },
+  "logging": { "level": "warn", "max_local_retention_days": 7, "redact_sensitive_data": true },
+  "packaging": {
+    "portable_single_file": true,
+    "virtualize_filesystem": true,
+    "virtualize_registry": true,
+    "ephemeral_device_id": true,
+    "code_signing": true
+  },
+  "service": { "enabled": false }
+}

@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "product": "agent",
+  "role": "controller",
+  "branding": {
+    "app_name": "ApisAgent",
+    "display_name": "АПИС Интерфейс за дилъри",
+    "executable_name": "ApisAgent.exe",
+    "window_title": "АПИС Европа АД",
+    "header_line1": "АПИС Европа АД",
+    "header_subtitle": "Интерфейс за дилъри",
+    "company": "АПИС Европа АД"
+  },
+  "server": {
+    "_comment": "rendezvous/api/public_key идват от configs/secrets.json (gitignored) при build; не се пазят в repo.",
+    "allow_server_override": false,
+    "relay_fallback": true
+  },
+  "language": { "default": "bg", "allow_user_change": false, "show_picker_on_first_run": false },
+  "theme": { "mode": "light", "allow_user_change": false },
+  "ui": {
+    "tray_enabled": false,
+    "close_behavior": "exit",
+    "show_id_prominently": true,
+    "show_connect_panel": true,
+    "hide_all_settings": true
+  },
+  "auth": {
+    "otp_enabled": true
+  },
+  "features": {
+    "file_transfer_enabled": false,
+    "clipboard_sync_default": false,
+    "audio_capture_default": false,
+    "recording": false,
+    "plugin_system": false
+  },
+  "security": {
+    "lan_discovery": false,
+    "direct_ip_connection": false,
+    "tcp_tunneling": false,
+    "auto_update": false,
+    "telemetry": false,
+    "crash_reports": false,
+    "ipv6_listening": false
+  },
+  "logging": { "level": "warn", "max_local_retention_days": 7, "redact_sensitive_data": true },
+  "packaging": {
+    "portable_single_file": true,
+    "virtualize_filesystem": true,
+    "virtualize_registry": true,
+    "ephemeral_device_id": true,
+    "code_signing": true
+  },
+  "service": { "enabled": false }
+}

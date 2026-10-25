@@ -1,0 +1,41 @@
+diff --git a/src/privacy_mode.rs b/src/privacy_mode.rs
+index 234004d..392f910 100644
+--- a/src/privacy_mode.rs
++++ b/src/privacy_mode.rs
+@@ -208,7 +208,10 @@ fn get_supported_impl(impl_key: &str) -> String {
+     cur_impl
+ }
+ 
++#[allow(unreachable_code, unused_variables)]
+ pub async fn turn_on_privacy(impl_key: &str, conn_id: i32) -> Option<ResultType<bool>> {
++    // Apis (P7): privacy mode is never turned on, also when toggled on at runtime from the CM.
++    return Some(Err(anyhow!("Privacy mode is disabled")));
+     if is_async_privacy_mode() {
+         turn_on_privacy_async(impl_key.to_string(), conn_id).await
+     } else {
+@@ -407,7 +410,10 @@ pub fn check_privacy_mode_err(
+ }
+ 
+ #[inline]
++#[allow(unreachable_code)]
+ pub fn is_privacy_mode_supported() -> bool {
++    // Apis (P7): reported as unsupported, so the peer gets no privacy mode option.
++    return false;
+     !DEFAULT_PRIVACY_MODE_IMPL.is_empty()
+ }
+ 
+diff --git a/src/server/connection.rs b/src/server/connection.rs
+index caa53b7..54d4f9d 100644
+--- a/src/server/connection.rs
++++ b/src/server/connection.rs
+@@ -2659,6 +2659,10 @@ impl Connection {
+         if enable_prefix_option == keys::OPTION_ENABLE_BLOCK_INPUT {
+             return false;
+         }
++        // Apis (P7): the client's screen is never hidden from them.
++        if enable_prefix_option == keys::OPTION_ENABLE_PRIVACY_MODE {
++            return false;
++        }
+         use hbb_common::rendezvous_proto::control_permissions::Permission;
+         if let Some(control_permissions) = control_permissions {
+             let permission = match enable_prefix_option {

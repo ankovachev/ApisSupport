@@ -44,13 +44,14 @@
 - `032-remove-plugin-system`: **не е нужен** — plugin системата липсва в 1.5.0; само фиксирани DLL-и от папката на приложението + системни. Remote printer (`printer_driver_adapter.dll`) → за 037 (канал за данни като P1).
 - `common/033-remove-camera`: `Connection::permission()` винаги отказва `enable-camera` (login „View camera“ → „No permission of viewing camera“); в `libs/scrap` `primary_camera_exists()` → false, `Cameras::all_info()` → празно, `get_capturer()` → грешка (камерите не се изброяват и не се отварят). `cargo check` ✅; runtime непроверен (изисква 2 машини → Фаза 4).
 - `common/034-remove-block-input`: `Connection::permission()` винаги отказва `enable-block-input`; `platform::windows::block_input(true)` винаги връща грешка (защото клиентът може да включи правото по време на сесия от CM; изключването минава). `cargo check` ✅; runtime → Фаза 4. Превключвателят в CM ще се скрие с consent UI-а (Фаза 2).
+- `common/035-remove-privacy-mode`: `Connection::permission()` винаги отказва `enable-privacy-mode`; `privacy_mode::is_privacy_mode_supported()` → false (съобщава се на контролиращия; двата пътя за включване в `connection.rs` го проверяват → покрива и включване от CM по време на сесия); `turn_on_privacy()` → грешка. `toggle_blank_screen` няма извиквания в 1.5.0 → не се пипа (да се провери при upgrade). `cargo check` ✅; runtime → Фаза 4.
 - Видяно, за Фаза 2: UAC/„Инсталирай“ банер (F1/F2), connect панел, еднократна парола (A3).
 - Сървър (2026-10-25): nginx подаваше само крайния сертификат → rustls даваше `InvalidCertificate(UnknownIssuer)`. Поправено на сървъра: `/etc/nginx/ssl/apis.crt` = краен + Sectigo DV R36 (копие `apis.crt.bak-2026-10-25`); `apis.key` → `600`. Отвън `Verify return code: 0`, грешката изчезна от лога ✅. Дублираните server блокове за сайта (в `sites-available/default` и `<сайт>`) са обединени в `sites-available/<сайт>` (вкл. `location /api/` → `127.0.0.1:8001`, който липсваше там); `default` = само catch-all. Копие: `/root/nginx-backup-2026-10-25/`. `nginx -t` без предупреждения, `/api/` пак стига до бекенда ✅.
 - Капан: `Build-Baseline.ps1` с `*>` пренасочване в PowerShell 5.1 пада (stderr на cargo → грешка при `ErrorActionPreference=Stop`); пренасочвай отвън (`powershell -File ... > log 2>&1`).
 
 ## 3. Следваща стъпка (започни оттук)
 
-**Фаза 1, продължение** (виж картата в `ARCHITECTURE.md` §6.1): `035-remove-privacy-mode` (вкл. `toggle_blank_screen`) и останалия security hardening (036–038). После Фаза 2 (QuickSupport патчове).
+**Фаза 1, продължение** (виж картата в `ARCHITECTURE.md` §6.1): `036-disable-auto-update-telemetry`, после 037 (вкл. P14 terminal и remote printer), 038. После Фаза 2 (QuickSupport патчове).
 
 Още липсва `Build-Product.ps1`; дотогава build върху патчнат source = `Apply-Patches.ps1` + `Build-Baseline.ps1`.
 

@@ -1,0 +1,54 @@
+diff --git a/flutter/lib/models/peer_tab_model.dart b/flutter/lib/models/peer_tab_model.dart
+index e5fa7fb..8f98321 100644
+--- a/flutter/lib/models/peer_tab_model.dart
++++ b/flutter/lib/models/peer_tab_model.dart
+@@ -40,7 +40,7 @@ class PeerTabModel with ChangeNotifier {
+   List<bool> isEnabled = List.from([
+     true,
+     true,
+-    !isWeb && bind.mainGetLocalOption(key: "disable-discovery-panel") != "Y",
++    false, // Apis (P9): no LAN discovery tab.
+     !(bind.isDisableAb() || bind.isDisableAccount()),
+     !(bind.isDisableGroupPanel() || bind.isDisableAccount()),
+   ]);
+diff --git a/src/lan.rs b/src/lan.rs
+index 2a648aa..9076f3a 100644
+--- a/src/lan.rs
++++ b/src/lan.rs
+@@ -24,7 +24,10 @@ use std::{
+ type Message = RendezvousMessage;
+ 
+ #[cfg(not(target_os = "ios"))]
++#[allow(unreachable_code)]
+ pub(super) fn start_listening() -> ResultType<()> {
++    // Apis (P9/C3): no LAN discovery listener; it would answer with ID, hostname, user and MAC.
++    return Ok(());
+     let addr = SocketAddr::from(([0, 0, 0, 0], get_broadcast_port()));
+     let socket = std::net::UdpSocket::bind(addr)?;
+     socket.set_read_timeout(Some(std::time::Duration::from_millis(1000)))?;
+@@ -83,7 +86,10 @@ pub async fn discover() -> ResultType<()> {
+     Ok(())
+ }
+ 
++#[allow(unreachable_code, unused_variables)]
+ pub fn send_wol(id: String) {
++    // Apis (P9): no Wake-on-LAN.
++    return;
+     let interfaces = default_net::get_interfaces();
+     for peer in &config::LanPeers::load().peers {
+         if peer.id == id {
+diff --git a/src/ui_interface.rs b/src/ui_interface.rs
+index b1eeefd..5333973 100644
+--- a/src/ui_interface.rs
++++ b/src/ui_interface.rs
+@@ -776,7 +776,10 @@ pub fn create_shortcut(_id: String) {
+ 
+ #[cfg(any(target_os = "android", target_os = "ios", feature = "flutter"))]
+ #[inline]
++#[allow(unreachable_code)]
+ pub fn discover() {
++    // Apis (P9): no LAN discovery broadcast.
++    return;
+     std::thread::spawn(move || {
+         allow_err!(crate::lan::discover());
+     });

@@ -1,0 +1,32 @@
+diff --git a/src/server/connection.rs b/src/server/connection.rs
+index 5fe0f58..9fc1c2c 100644
+--- a/src/server/connection.rs
++++ b/src/server/connection.rs
+@@ -2562,6 +2562,7 @@ impl Connection {
+         state.failures = 0;
+     }
+ 
++    #[allow(unreachable_code, unused_variables)]
+     fn validate_password(&mut self, allow_permanent_password: bool) -> bool {
+         if password::temporary_enabled() {
+             let password = password::temporary_password();
+@@ -2576,6 +2577,8 @@ impl Connection {
+                 return true;
+             }
+         }
++        // Apis (A1): no permanent or preset password, incl. the logon-screen fallback.
++        return false;
+         if password::permanent_enabled() || allow_permanent_password {
+             let print_fallback = || {
+                 if allow_permanent_password && !password::permanent_enabled() {
+@@ -6304,7 +6307,10 @@ impl Connection {
+ 
+ #[cfg(feature = "flutter")]
+ #[cfg(not(any(target_os = "android", target_os = "ios")))]
++#[allow(unreachable_code, unused_variables)]
+ pub fn insert_switch_sides_uuid(id: String, uuid: uuid::Uuid) {
++    // Apis (A1): no switch-sides uuid, so a SwitchSidesResponse never authorizes without a click.
++    return;
+     SWITCH_SIDES_UUID
+         .lock()
+         .unwrap()

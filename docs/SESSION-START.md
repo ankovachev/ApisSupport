@@ -22,7 +22,7 @@
 |---|---|---|
 | 0 — setup + vanilla baseline | ✅ | [`PHASE0-baseline.md`](PHASE0-baseline.md) |
 | 1 — общи патчове (`patches/common/`) | ✅ | [`PHASE1-common.md`](PHASE1-common.md) |
-| 2 — QuickSupport патчове | ▶ в ход (`001-app-name` ✅) | [`PHASE2-quicksupport.md`](PHASE2-quicksupport.md), §3 по-долу |
+| 2 — QuickSupport патчове | ▶ в ход (`001`, `002` ✅) | [`PHASE2-quicksupport.md`](PHASE2-quicksupport.md), §3 по-долу |
 | 3–7 | предстоят | `ARCHITECTURE.md` §8 |
 
 - **Repo:** `main` = `origin/main` (https://github.com/ankovachev/ApisSupport), локално има commit-и за `001-app-name` / `039` (push — след одобрение).
@@ -51,7 +51,7 @@
 | # | Патч | Изисквания | Бележки за старта |
 |---|---|---|---|
 | 1 | `001-app-name` | C1 | ✅ 2026-10-26 (+ `common/039-custom-client-hardening`). Карта и странични ефекти на `is_custom_client()`: `PHASE2-quicksupport.md` §2. |
-| 2 | `002-disable-unattended` | A1 | Структурно: permanent password / unattended код-пътят изцяло. Най-важният security патч (`ARCHITECTURE.md` §9). |
+| 2 | `002-disable-unattended` | A1 | ✅ 2026-10-26. Пътищата до авторизация: `PHASE2-quicksupport.md` §3. |
 | 3 | `003-consent-access-level` | A2, A9 | Popup Приеми/Откажи + „Само гледане“ / „Пълен контрол“. Upstream има опция `access-mode` (`full`/`view`) в `is_permission_enabled_locally` — отправна точка. Тук може да се реши и file transfer прозорецът (P1). |
 | 4 | `004-no-connection-password` | A3 | Без еднократна/постоянна парола в UI и в проверката. |
 | 5 | `005-connection-limits` | A4–A7 | Timeout 60 s, idle 15 мин, max 2 връзки, rate limit (да се свери с upstream anti-bruteforce). |

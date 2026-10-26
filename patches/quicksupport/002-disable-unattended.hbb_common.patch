@@ -1,0 +1,44 @@
+diff --git a/src/config.rs b/src/config.rs
+index 5cda609..89fc754 100644
+--- a/src/config.rs
++++ b/src/config.rs
+@@ -1319,7 +1319,10 @@ impl Config {
+     /// Returns `true` when the password is accepted or already matches the effective
+     /// preset password. Returns `false` when changing the password is disabled or
+     /// the new password cannot be prepared for storage.
++    #[allow(unreachable_code, unused_variables)]
+     pub fn set_permanent_password(password: &str) -> bool {
++        // Apis (A1): a permanent password is never stored (UI, IPC or `--password`).
++        return false;
+         if Self::is_disable_change_permanent_password() {
+             return false;
+         }
+@@ -1373,10 +1376,13 @@ impl Config {
+     }
+ 
+     /// Persist permanent password storage and salt from service->user config sync.
++    #[allow(unreachable_code, unused_variables)]
+     pub fn set_permanent_password_storage_for_sync(
+         storage: &str,
+         salt: &str,
+     ) -> crate::ResultType<bool> {
++        // Apis (A1): no permanent password from the service->user sync either.
++        return Ok(false);
+         let mut config = CONFIG.write().unwrap();
+         if !Self::apply_permanent_password_storage_for_sync(&mut config, storage, salt)? {
+             return Ok(false);
+diff --git a/src/password_security.rs b/src/password_security.rs
+index eb7ab03..2de0373 100644
+--- a/src/password_security.rs
++++ b/src/password_security.rs
+@@ -39,7 +39,10 @@ pub fn temporary_password() -> String {
+     TEMPORARY_PASSWORD.read().unwrap().clone()
+ }
+ 
++#[allow(unreachable_code)]
+ fn verification_method() -> VerificationMethod {
++    // Apis (A1): no permanent password, whatever "verification-method" says.
++    return VerificationMethod::OnlyUseTemporaryPassword;
+     let method = Config::get_option("verification-method");
+     if method == "use-temporary-password" {
+         VerificationMethod::OnlyUseTemporaryPassword

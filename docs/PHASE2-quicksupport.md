@@ -13,6 +13,8 @@
 |---|---|---|---|
 | `001-app-name` (hbb) | C1, C2 | `APP_NAME` по подразбиране = `{{APP_NAME}}` (`ApisQuickSupport`). Същият патч е и `agent/001-app-name` (там → `ApisAgent`) | Release build: config/log в `%APPDATA%\ApisQuickSupport\` (`ApisQuickSupport*.toml`), `%APPDATA%\RustDesk` непроменен (сравнение размер+време на всички файлове), IPC pipe `\\.\pipe\ApisQuickSupport\query`, нов ID ✅ |
 
+| `002-disable-unattended` (+hbb) | A1 | Без постоянна/preset парола структурно: `verification_method()` → само еднократна (→ `permanent_enabled()` = false); `set_permanent_password()` и `set_permanent_password_storage_for_sync()` не записват нищо (UI, IPC, `--password`, sync от услугата); `validate_password()` не проверява постоянна/preset парола (вкл. fallback-а на logon екрана); `insert_switch_sides_uuid()` → нищо, т.е. switch-sides отговор никога не авторизира без клик | `cargo check` ✅ (14); release build: задаване на постоянна парола от UI → `ApisQuickSupport.toml` не е презаписан, `password = ''` ✅; вход/switch-sides → Фаза 4 |
+
 Заедно с 001 е добавен общият `common/039-custom-client-hardening` (виж `PHASE1-common.md` §2), защото затваря пътищата, които сменят или използват APP_NAME.
 
 ## 2. Картографиране на APP_NAME (RustDesk 1.5.0)
@@ -33,7 +35,30 @@
 | `platform/windows.rs` (MSI, custom icon, update staging), `updater.rs` | Само при инсталация/обновление | Неприложимо (F1, P11) |
 | `verify_login` | Закоментирана upstream | — |
 
-## 3. Отворени точки
+## 3. Пътища до авторизация (контролирана страна, 1.5.0)
+
+Единствената точка, която прави връзката авторизирана, е `Connection::send_logon_response_and_keep_alive()` (`src/server/connection.rs`). Извиква се от:
+
+| Път | Условие | След 002 |
+|---|---|---|
+| `ipc::Data::Authorize` | Клиентът натиска „Приеми“ в CM | Остава — единственият желан път (A2) |
+| `LoginRequest` + парола → `validate_password()` | approve-mode `password`/`both` | Само еднократната парола → махната с 004 (A3) |
+| `LoginRequest` → `is_recent_session(false)` | Повторна връзка до `SESSION_TIMEOUT` с вече приета еднократна парола | → 004 |
+| `Auth2fa` | Само след успешна парола | Следва паролата → 004 |
+| `SwitchSidesResponse` | uuid, записан при „смени страните“ от тази страна като контролираща | Затворен (002) |
+
+`approve_mode()` (`click`/`password`/`both`) решава дали изобщо се гледа паролата; принудителното `Click` е задача на 003/004. Preset паролата (`HARD_SETTINGS["password"]`) идва само от custom client конфиг → и без 002 е затворена от 039.
+
+## 4. Проверка на една машина
+
+- `--password <p>` работи само за инсталиран + администратор → неприложимо за преносимия exe.
+- UI: опит за задаване на постоянна парола → полето `password` в `%APPDATA%\ApisQuickSupport\config\ApisQuickSupport.toml` трябва да остане празно.
+- Реален отказ на вход с постоянна парола и switch-sides → E2E с две машини (Фаза 4).
+
+## 5. Отворени точки
 
 - Exe име/икона/версия ресурс — Фаза 3–4 (B1).
-- Следващ патч: `002-disable-unattended` (A1).
+- UI за постоянна парола (карта „Парола“, „Задай постоянна парола“, верификационен метод) още се вижда → 004/007.
+- Инсталация/Windows услуга (F1/F2) — без патч в картата досега; да се реши къде (007 или отделен).
+- Агентът: switch-sides и приемане на връзки изобщо → агентски патч във Фаза 5 (агентът не е контролиран).
+- Следващ патч: `003-consent-access-level` (A2, A9).

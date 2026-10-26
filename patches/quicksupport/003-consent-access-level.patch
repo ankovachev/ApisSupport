@@ -1,0 +1,86 @@
+diff --git a/flutter/lib/desktop/pages/server_page.dart b/flutter/lib/desktop/pages/server_page.dart
+index eeb51b6..14e1581 100644
+--- a/flutter/lib/desktop/pages/server_page.dart
++++ b/flutter/lib/desktop/pages/server_page.dart
+@@ -1069,6 +1069,8 @@ class _CmControlPanel extends StatelessWidget {
+   }
+ 
+   buildUnAuthorized(BuildContext context) {
++    // Apis (A2, A9): explicit consent with a chosen access level instead of Accept / Accept and Elevate.
++    return apisBuildConsent(context);
+     final bool canElevate = bind.cmCanElevate();
+     final model = Provider.of<ServerModel>(context);
+     final showElevation = canElevate &&
+@@ -1133,6 +1135,56 @@ class _CmControlPanel extends StatelessWidget {
+     ).marginOnly(bottom: buttonBottomMargin);
+   }
+ 
++  // Apis (A2, A9): the client accepts as view only or full control, or refuses.
++  // Keyboard/mouse start off for every connection, so view only needs no extra step.
++  Widget apisBuildConsent(BuildContext context) {
++    return Column(
++      mainAxisAlignment: MainAxisAlignment.end,
++      children: [
++        Row(
++          children: [
++            Expanded(
++              child: buildButton(
++                context,
++                color: MyTheme.accent,
++                onClick: () {
++                  handleAccept(context);
++                  windowManager.minimize();
++                },
++                text: 'Само гледане',
++                textColor: Colors.white,
++              ),
++            ),
++            Expanded(
++              child: buildButton(
++                context,
++                color: Colors.green[700],
++                onClick: () {
++                  // Sent on the same channel before the authorization, so it applies first.
++                  bind.cmSwitchPermission(
++                      connId: client.id, name: "keyboard", enabled: true);
++                  client.keyboard = true;
++                  handleAccept(context);
++                  windowManager.minimize();
++                },
++                text: 'Пълен контрол',
++                textColor: Colors.white,
++              ),
++            ),
++          ],
++        ),
++        buildButton(
++          context,
++          color: Colors.transparent,
++          border: Border.all(color: Colors.grey),
++          onClick: handleDisconnect,
++          text: 'Откажи',
++          textColor: null,
++        ),
++      ],
++    ).marginOnly(bottom: buttonBottomMargin);
++  }
++
+   Widget buildButton(BuildContext context,
+       {required Color? color,
+       GestureTapCallback? onClick,
+diff --git a/src/server/connection.rs b/src/server/connection.rs
+index 9fc1c2c..629cccd 100644
+--- a/src/server/connection.rs
++++ b/src/server/connection.rs
+@@ -2697,6 +2697,11 @@ impl Connection {
+         {
+             return false;
+         }
++        // Apis (A9): keyboard/mouse start off (view only); "full control" in the consent
++        // window switches it on for this session before the connection is authorized.
++        if enable_prefix_option == keys::OPTION_ENABLE_KEYBOARD {
++            return false;
++        }
+         use hbb_common::rendezvous_proto::control_permissions::Permission;
+         if let Some(control_permissions) = control_permissions {
+             let permission = match enable_prefix_option {

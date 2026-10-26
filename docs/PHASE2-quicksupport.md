@@ -14,6 +14,7 @@
 | `001-app-name` (hbb) | C1, C2 | `APP_NAME` по подразбиране = `{{APP_NAME}}` (`ApisQuickSupport`). Същият патч е и `agent/001-app-name` (там → `ApisAgent`) | Release build: config/log в `%APPDATA%\ApisQuickSupport\` (`ApisQuickSupport*.toml`), `%APPDATA%\RustDesk` непроменен (сравнение размер+време на всички файлове), IPC pipe `\\.\pipe\ApisQuickSupport\query`, нов ID ✅ |
 
 | `002-disable-unattended` (+hbb) | A1 | Без постоянна/preset парола структурно: `verification_method()` → само еднократна (→ `permanent_enabled()` = false); `set_permanent_password()` и `set_permanent_password_storage_for_sync()` не записват нищо (UI, IPC, `--password`, sync от услугата); `validate_password()` не проверява постоянна/preset парола (вкл. fallback-а на logon екрана); `insert_switch_sides_uuid()` → нищо, т.е. switch-sides отговор никога не авторизира без клик | `cargo check` ✅ (14); release build: задаване на постоянна парола от UI → `ApisQuickSupport.toml` не е презаписан, `password = ''` ✅; вход/switch-sides → Фаза 4 |
+| `003-consent-access-level` | A2, A9 | `permission()` → клавиатура/мишка изключени за всяка нова връзка (само гледане). Прозорецът за съгласие в CM (`buildUnAuthorized`) → „Само гледане“ / „Пълен контрол“ / „Откажи“ вместо „Приеми“ и „Приеми и повиши права“. „Пълен контрол“ праща `SwitchPermission(keyboard, true)` по същия канал преди `Authorize`, т.е. правото е налично от първия кадър. Превключвателят за клавиатура в CM остава — клиентът може да смени нивото по време на сесия | `cargo check` ✅ (14); release build ✅ (QS + агент); runtime тестът (агент → QS на една машина) е блокиран: двата получиха едно ID → `040` |
 
 Заедно с 001 е добавен общият `common/039-custom-client-hardening` (виж `PHASE1-common.md` §2), защото затваря пътищата, които сменят или използват APP_NAME.
 
@@ -61,4 +62,6 @@
 - UI за постоянна парола (карта „Парола“, „Задай постоянна парола“, верификационен метод) още се вижда → 004/007.
 - Инсталация/Windows услуга (F1/F2) — без патч в картата досега; да се реши къде (007 или отделен).
 - Агентът: switch-sides и приемане на връзки изобщо → агентски патч във Фаза 5 (агентът не е контролиран).
-- Следващ патч: `003-consent-access-level` (A2, A9).
+- „Повиши права“ (Elevate) остава в CM след приемане — да се реши заедно с F1/F2 (UAC за преносимия exe).
+- След приемане CM се минимизира (upstream) — видимата индикация е задача на 006 (A8).
+- Следващ патч: `004-no-connection-password` (A3) — вкл. принудително `approve-mode = click`.

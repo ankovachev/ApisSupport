@@ -1,0 +1,53 @@
+diff --git a/src/platform/windows.rs b/src/platform/windows.rs
+index 3a22374..5e180cc 100644
+--- a/src/platform/windows.rs
++++ b/src/platform/windows.rs
+@@ -553,7 +553,10 @@ fn service_main(arguments: Vec<OsString>) {
+     }
+ }
+ 
++#[allow(unreachable_code)]
+ pub fn start_os_service() {
++    // Apis (F2): never runs as a Windows service.
++    return;
+     if let Err(e) =
+         windows_service::service_dispatcher::start(crate::get_app_name(), ffi_service_main)
+     {
+@@ -1582,7 +1585,10 @@ fn get_after_install(
+     ", create_service=get_create_service(&exe))
+ }
+ 
++#[allow(unreachable_code, unused_variables)]
+ pub fn install_me(options: &str, path: String, silent: bool, debug: bool) -> ResultType<()> {
++    // Apis (F1): portable only, never installed.
++    bail!("Installation is disabled");
+     // MSI and EXE installations use different registry layouts, so MSI-to-EXE upgrades are not supported.
+     let (installed_subkey, _, _, _) = get_install_info();
+     if get_windows_installer_state(&installed_subkey)? == Some(true) {
+@@ -3342,7 +3348,10 @@ copy /Y \"%RUSTDESK_OUTPUT_DIR%\\{app_name} Tray.lnk\" \"%PROGRAMDATA%\\Microsof
+     ))
+ }
+ 
++#[allow(unreachable_code)]
+ pub fn install_service() -> bool {
++    // Apis (F2): no Windows service.
++    return false;
+     log::info!("Installing service...");
+     let _installing = crate::platform::InstallingService::new();
+     let (_, path, _, exe) = get_install_info();
+diff --git a/src/server/portable_service.rs b/src/server/portable_service.rs
+index 0b2601e..a419391 100644
+--- a/src/server/portable_service.rs
++++ b/src/server/portable_service.rs
+@@ -995,6 +995,11 @@ pub mod client {
+     // 2) Start helper process (direct or logon) with shmem argument.
+     // 3) Keep STARTING=true until IPC ping/pong marks RUNNING, or timeout watchdog resets it.
+     pub(crate) fn start_portable_service(para: StartPara) -> ResultType<()> {
++        // Apis (A2, F1): elevation only through the UAC prompt the client confirms; not with
++        // credentials sent by the controller (no click on the client's side, and it copies the exe).
++        if matches!(para, StartPara::Logon(..)) {
++            bail!("Elevation with credentials is not allowed");
++        }
+         log::info!("start portable service");
+         let launch_token = {
+             // Keep lock guards in explicit short scopes to make it obvious

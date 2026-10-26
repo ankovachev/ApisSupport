@@ -1,0 +1,15 @@
+diff --git a/src/config.rs b/src/config.rs
+index cd5a3fb..f5b0e4f 100644
+--- a/src/config.rs
++++ b/src/config.rs
+@@ -2886,7 +2886,10 @@ pub fn is_disable_account() -> bool {
+ }
+ 
+ #[inline]
++#[allow(unreachable_code)]
+ pub fn is_disable_installation() -> bool {
++    // Apis (F1): no "Install" banner or page, and --install, --silent-install, --update refused.
++    return true;
+     is_some_hard_opton("disable-installation")
+ }
+ 

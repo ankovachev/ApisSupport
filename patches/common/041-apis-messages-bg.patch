@@ -1,8 +1,8 @@
 diff --git a/src/lang/bg.rs b/src/lang/bg.rs
-index c129240..34c3726 100644
+index c129240..581a7d4 100644
 --- a/src/lang/bg.rs
 +++ b/src/lang/bg.rs
-@@ -780,6 +780,11 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
+@@ -780,6 +780,12 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
          ("RustDesk could not load a GStreamer component needed for screen capture ({})", "RustDesk не можа да зареди компонент на GStreamer, необходим за заснемане на екрана ({})"),
          ("Relay fallback delay in seconds", "Забавяне преди преминаване към препредаване в секунди"),
          ("relay-fallback-delay-tip", "Колко време вече установената връзка чрез препредаване изчаква директната WebRTC връзка, преди да бъде използвана вместо нея. Увеличете, за да дадете повече време на бавна директна връзка; намалете, за да се премине по-бързо към препредаване в мрежи, където директна връзка е невъзможна. Оставете празно за стойността по подразбиране 2.5 секунди."),
@@ -11,6 +11,7 @@ index c129240..34c3726 100644
 +        ("Consent request not answered, reconnect not allowed", "Клиентът не отговори на искането за достъп."),
 +        ("The client already has the maximum number of sessions", "Клиентът вече има максималния брой активни сесии."),
 +        ("Too many access requests, try again in a minute", "Твърде много искания за достъп. Опитайте отново след минута."),
++        ("Elevation with credentials is not allowed", "Повишаване на правата с потребител и парола не е разрешено. Клиентът може да потвърди UAC прозореца."),
          ("To start a voice call, enable \"Audio capture\" on the \"Screen share\" page.", "")
      ].iter().cloned().collect();
  }

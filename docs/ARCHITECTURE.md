@@ -121,6 +121,7 @@ ApisSupport/                      # ново, самостоятелно repo
 | `037-security-defaults` | P1-P4, P12, P14, P15 | audio/recording/terminal/remote printer/remote restart забранени (вкл. от CM); clipboard и file transfer изключени при свързване, клиентът може да ги включи за сесията от CM; IPv6 — без отделен патч (виж REQUIREMENTS) |
 | `038-logging-hardening` | P13 | Ниско ниво, кратка retention, redaction |
 | `039-custom-client-hardening` | C1, L2, N3, A8 | Игнорира custom-client конфиг (`custom.txt` / подаден при старт) — иначе може да смени APP_NAME и да наложи default/override/hard настройки; `hide_cm()` → винаги `false` (CM не се скрива; upstream го позволява само за custom client) |
+| `040-random-device-id` | F5, C1 | Случайно ID вместо производното от MAC адреса (иначе: едно и също ID при всяко стартиране въпреки виртуализацията, еднакво ID за QS и агента на една машина, хардуерен идентификатор пред трети лица) |
 
 ### 6.2 QuickSupport патчове (`quicksupport/`)
 
@@ -132,8 +133,9 @@ ApisSupport/                      # ново, самостоятелно repo
 | `004-no-connection-password` | A3 | Без парола за връзка |
 | `005-connection-limits` | A4, A5, A6, A7 | Prompt timeout 60s, idle 15min, max 2 връзки, rate-limit |
 | `006-session-indicator` | A8 | Видима индикация за активна сесия + прекратяване |
-| `007-hide-all-settings` | L1, L2, L3 | Скрива настройки; enforcement на ниво код |
+| `007-hide-all-settings` | L1, L2, L3, §5 | Скрива настройки; enforcement на ниво код. Плюс елементите, които QS не трябва да има като контролирана страна: панел „Отдалечено управление“ (поле за ID + „Свързване“), табовете с история/любими/адресна книга, линкове към rustdesk.com |
 | `008-close-equals-exit` | F3 | X = пълно спиране (override на minimize-to-tray) |
+| `009-no-install` | F1, F2 | Без инсталация и Windows услуга: банерът „Инсталирай“ скрит; `--install`, `--install-service`, install страницата и пътищата към услугата отказани на ниво код. Да се реши и „Повиши права“ (UAC) |
 | `010-branding-home` | B1, B3, B5 | Header, центрирано лого, terms-of-use панел (текст от Приложение А) |
 
 ### 6.3 Agent патчове (`agent/`)
@@ -160,7 +162,9 @@ ApisSupport/                      # ново, самостоятелно repo
 | Code signing | D3 | `Sign-Binary.ps1` — `signtool` с наличния сертификат |
 | Еднофайлов exe | F4 | Изход на Enigma packer-а |
 
-> **Важна бележка за F5 (нов ID):** при пълна виртуализация `%APPDATA%` е sandbox-нат и се изхвърля при изход, затова device ID не персистира → нов при всяко стартиране **по природа**, без да е нужен отделен патч. Ще се валидира, не се приема наум.
+> **Важна бележка за F5 (нов ID):** при пълна виртуализация `%APPDATA%` е sandbox-нат и се изхвърля при изход, затова записаното ID не персистира. **Това не стига (установено 2026-10-26):** на desktop upstream генерира ID-то от MAC адреса (`Config::get_auto_id`), т.е. празна конфигурация винаги дава същото ID → нужен е `common/040-random-device-id`.
+
+> **Бележка (2026-10-26):** флаговете в `configs/<product>.json` (`ui.*`, `access.*`, `features.*` …) засега описват намерението; патчовете четат от конфигурацията само token-ите (`Apply-Patches.ps1`). Поведението е hardcode-нато в патчовете на съответния продукт.
 
 ---
 

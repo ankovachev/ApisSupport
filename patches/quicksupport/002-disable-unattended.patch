@@ -1,5 +1,5 @@
 diff --git a/src/server/connection.rs b/src/server/connection.rs
-index 5fe0f58..9fc1c2c 100644
+index 5fe0f58..306530a 100644
 --- a/src/server/connection.rs
 +++ b/src/server/connection.rs
 @@ -2562,6 +2562,7 @@ impl Connection {
@@ -30,3 +30,15 @@ index 5fe0f58..9fc1c2c 100644
      SWITCH_SIDES_UUID
          .lock()
          .unwrap()
+@@ -6313,7 +6319,11 @@ pub fn insert_switch_sides_uuid(id: String, uuid: uuid::Uuid) {
+ 
+ #[cfg(feature = "flutter")]
+ #[cfg(not(any(target_os = "android", target_os = "ios")))]
++#[allow(unreachable_code, unused_variables)]
+ pub fn insert_pending_switch_sides_uuid(id: String, uuid: uuid::Uuid) -> bool {
++    // Apis (A1): QuickSupport is only ever controlled, so a SwitchSidesRequest never makes it
++    // connect back to the controlling peer.
++    return false;
+     let mut uuids = PENDING_SWITCH_SIDES_UUID.lock().unwrap();
+     uuids.retain(|_, (instant, _, _)| instant.elapsed() < SWITCH_SIDES_UUID_TTL);
+     if uuids.get(&id).map(|(_, stored_uuid, _)| stored_uuid) == Some(&uuid) {

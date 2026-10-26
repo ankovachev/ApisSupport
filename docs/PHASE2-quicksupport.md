@@ -1,7 +1,7 @@
 # Фаза 2 — QuickSupport патчове (`patches/quicksupport/`)
 
 **Започната:** 2026-10-26
-**Състояние:** в ход — `001-app-name` ✅
+**Състояние:** 001–009 ✅ (+ общите 039, 040, 041). Отворено: замръзване на картината след „Повишаване“ (§5).
 
 Канон за изискванията: [`REQUIREMENTS.md`](../REQUIREMENTS.md). Карта изискване→патч: [`ARCHITECTURE.md`](ARCHITECTURE.md) §6.2. Работният цикъл е същият като във Фаза 1 ([`PHASE1-common.md`](PHASE1-common.md) §1, §5).
 
@@ -79,7 +79,11 @@
 
 `approve_mode()` (`click`/`password`/`both`) решава дали изобщо се гледа паролата; от 004 е винаги `Click`. Остава един теоретичен вход към паролния път — `allow-logon-screen-password` (builtin опция, само от custom client конфиг → затворен от 039), а и там няма валидна парола. След 002 + 004 единственият път до авторизация е кликът в CM. Preset паролата (`HARD_SETTINGS["password"]`) идва само от custom client конфиг → и без 002 е затворена от 039.
 
-## 4. Проверка на една машина
+## 4. Проверка
+
+Инструменти (2026-10-26): `scripts/New-PatchScratch.ps1` (scratch git repo с pin копия + token-формата на предходните патчове — тайните не влизат в контекста на новия патч) и `scripts/Build-Test.ps1` (build на продуктите в `builds\test\<product>\`, вкл. `-TestLimits` и `-LogLevel`; конфигът се връща във `finally`). Чек листове за ръчни тестове — в `builds\test\` (gitignored).
+
+### На една машина
 
 - `--password <p>` работи само за инсталиран + администратор → неприложимо за преносимия exe.
 - UI: опит за задаване на постоянна парола → полето `password` в `%APPDATA%\ApisQuickSupport\config\ApisQuickSupport.toml` трябва да остане празно.
@@ -92,11 +96,15 @@ Token-ите позволяват кратък тест: временно `idle_
 
 ## 5. Отворени точки
 
-- Exe име/икона/версия ресурс — Фаза 3–4 (B1).
+- Exe име/икона/версия ресурс — Фаза 3–4 (B1). Task Manager показва „RustDesk Remote Desktop“ / „Purslane Tech Pte. Ltd.“ (`flutter/windows/runner/Runner.rc`).
 - UI за постоянна парола (карта „Парола“, „Задай постоянна парола“, верификационен метод) още се вижда → 004/007.
 - Инсталация/Windows услуга (F1/F2) — без патч в картата досега; да се реши къде (007 или отделен).
 - Агентът: switch-sides и приемане на връзки изобщо → агентски патч във Фаза 5 (агентът не е контролиран).
-- **Повишаването замръзва картината (2026-10-26, отворено).** След UAC „Да“ мишката/клавиатурата от агента стигат до клиента, но видеото при агента спира на последния кадър (леко затъмнен). Логът на клиента: `Portable service startup timeout before IPC ready`, после `Portable service ipc peer identity unavailable …; continue`, `monitor0 service: SWITCH` → видеото минава към SYSTEM процеса и спира. Лог от SYSTEM процеса няма нито в `systemprofile\AppData\Roaming`, нито в `%APPDATA%` на потребителя. Нито един патч не пипа заснемането/SYSTEM процеса (009 отказва само `Logon`) → вероятно upstream, но непотвърдено. Следва диагностичен build с лог `info`.
+- **Повишаването замръзва картината (2026-10-26, отворено).** След UAC „Да“ мишката/клавиатурата от агента стигат до клиента, но видеото при агента спира на последния кадър (леко затъмнен). Логът на клиента: `Portable service startup timeout before IPC ready`, после `Portable service ipc peer identity unavailable …; continue`, `monitor0 service: SWITCH` → видеото минава към SYSTEM процеса и спира. Лог от SYSTEM процеса няма нито в `systemprofile\AppData\Roaming`, нито в `%APPDATA%` на потребителя. Нито един патч не пипа заснемането/SYSTEM процеса (009 отказва само `Logon`) → вероятно upstream, но непотвърдено.
+  - **Диагностичен build (лог `info`, 2026-10-26):** клиент = настолен Windows 10, агент = лаптоп Windows 11. Веригата тръгва: UAC → повишен процес (`elevate: true -> Ok(true)`) → SYSTEM процес `rustdesk.exe --run-as-system --portable-service-shmem-name=…` (видян в Task Manager) → `Got portable service ipc connection` → `switch due to portable service running changed` → `Create shared memory capturer` → **нито един кадър до края на сесията**. Входът минава. Преди повишаването: `No image, fall back to gdi` — на тази машина DXGI не дава картина и upstream минава на GDI; хипотеза: SYSTEM процесът заснема през DXGI без същия резервен път. SYSTEM процесът не остави лог (нито в `systemprofile`, нито в `%APPDATA%`; в `log\portable-service\` е само редът от повишения процес).
+  - **Следваща стъпка:** официалният преносим RustDesk (upstream, публични сървъри) на същите две машини, „Повишаване“ → замръзва ли? Да → ограничение на upstream/средата; не → търсим у нас. Плюс видеокартата на клиента (Device Manager → Display adapters).
+- **F5 (повишаване):** споделената памет е файл в `C:\ProgramData\ApisQuickSupport\portable_service_shmem\` — извън `%APPDATA%`; да се провери под Enigma.
+- **Одит към API сървъра:** при всяка връзка `Audit post dropped … status 404` — QS праща одит на връзките към нашия API сървър, който няма такъв endpoint. Решение: endpoint на сървъра или спиране на изпращането (N1/P13).
 - „Повиши права“ — решено в 009 (само с UAC клик на клиента). Под Enigma (Фаза 4) да се провери, че процесът като SYSTEM и споделената памет не оставят следи.
 - `--install-idd`, `--install-remote-printer` (драйвери) не са отделно блокирани — изискват администратор на машината; принтерът е забранен от 037. Да се преценят във Фаза 4.
 - Цветна рамка около екрана по време на сесия (като Teams/Zoom) — обсъдена за A8, отложена (нов Win32 код); може във Фаза 3.

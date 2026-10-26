@@ -9,27 +9,29 @@
 ## 1. Ред за четене (задължително, в този ред)
 
 1. [`CLAUDE.md`](../CLAUDE.md) — контекст, pin, build предпоставки, „не пипай".
-2. [`REQUIREMENTS.md`](../REQUIREMENTS.md) — заключени изисквания (v1.1 + P14/P15 и уточнения от 2026-10-25). Канон.
+2. [`REQUIREMENTS.md`](../REQUIREMENTS.md) — заключени изисквания (v1.1 + P14/P15 и уточнения от 2026-10-25/26, вкл. A4/A5/A7). Канон.
 3. [`docs/ARCHITECTURE.md`](ARCHITECTURE.md) — архитектура + карта изискване→патч, фази. Канон.
-4. [`docs/PHASE1-common.md`](PHASE1-common.md) — какво е направено във Фаза 1: инструменти, патчове, решения, сървърни промени, рецепти за проверка, отворени точки.
-5. Този файл — текущо състояние и следваща стъпка.
+4. [`docs/PHASE1-common.md`](PHASE1-common.md) — общите патчове (вкл. 039–041 от 2026-10-26), token-и, процес, рецепти.
+5. [`docs/PHASE2-quicksupport.md`](PHASE2-quicksupport.md) — QuickSupport патчове 001–009, картите (APP_NAME, пътища до авторизация, L2 одит), проверки, отворени точки.
+6. Този файл — текущо състояние и следваща стъпка.
 
 Каноничните docs надделяват над всяко устно допускане.
 
-## 2. Къде сме (към 2026-10-26, сутрин)
+## 2. Къде сме (към 2026-10-26, вечер)
 
 | Фаза | Състояние | Детайли |
 |---|---|---|
 | 0 — setup + vanilla baseline | ✅ | [`PHASE0-baseline.md`](PHASE0-baseline.md) |
-| 1 — общи патчове (`patches/common/`) | ✅ | [`PHASE1-common.md`](PHASE1-common.md) |
-| 2 — QuickSupport патчове | ▶ в ход (`001`–`008` ✅) | [`PHASE2-quicksupport.md`](PHASE2-quicksupport.md), §3 по-долу |
-| 3–7 | предстоят | `ARCHITECTURE.md` §8 |
+| 1 — общи патчове (`patches/common/`) | ✅ (+ 039, 040, 041 от 2026-10-26) | [`PHASE1-common.md`](PHASE1-common.md) |
+| 2 — QuickSupport патчове | ✅ 001–009, с една отворена точка (повишаване на права) | [`PHASE2-quicksupport.md`](PHASE2-quicksupport.md) |
+| 3 — QuickSupport branding | ⏭ следваща | §3.3 по-долу |
+| 4–7 | предстоят | `ARCHITECTURE.md` §8 |
 
-- **Repo:** `main` = `origin/main` (https://github.com/ankovachev/ApisSupport), локално има commit-и за `001-app-name` / `039` (push — след одобрение).
-- **Source:** `rustdesk-source/` чист, на pin-а (RustDesk 1.5.0 `fada664` + hbb_common `229b9045`). `target/` кешът е топъл (incremental `cargo check` ~11 s, build ~5–7 мин).
-- **Готово във Фаза 1:** scripts `Reset-Vanilla` / `Apply-Patches` / `Common`; 14 общи патча (001–003, 010, 011, 020, 030, 031, 033–038; 032 не е нужен) + `039` (добавен 2026-10-26). Приложението говори само с нашия сървър, на български, светла тема, без „RustDesk“ в текстовете, без LAN discovery / direct IP / tunneling / WebRTC / proxy / update check, с отказани опасни права и минимален лог.
-- **Сървър:** поправени веригата на TLS сертификата, правата на частния ключ и дублираният nginx config (виж `PHASE1-common.md` §4).
-- **Нови изисквания:** P14 (remote terminal — забранен), P15 (remote restart — забранен); уточнени P1–P4 и P12.
+- **Repo:** `main`; на `origin/main` е всичко до `b729373` (008). **Локално, непушнато:** 009 + документацията от вечерта — push след одобрение (§3.1).
+- **Source:** `rustdesk-source/` чист, на pin-а (RustDesk 1.5.0 `fada664` + hbb_common `229b9045`). `target/` кешът е топъл (`cargo check` ~15 s, build ~5–7 мин).
+- **QuickSupport днес (проверено на две машини):** собствен APP_NAME (`%APPDATA%\ApisQuickSupport`), случайно ID, без постоянна и без еднократна парола, достъп само с клик в прозореца за съгласие с избор „Само гледане“ / „Пълен контрол“ / „Откажи“, лимити (съгласие 120 s, неактивност 30 мин, max 2 сесии, 3 прозореца/мин), видим прозорец на сесията с време, ниво и „Прекъсни“, компактен прозорец без настройки и без панел за свързване, X = изход, без инсталация и услуга.
+- **Агентът:** засега само общите патчове + `agent/001-app-name`; изглежда като upstream с наш сървър/език/тема. Фаза 5.
+- **Тестови build-ове:** `builds\test\quicksupport\`, `builds\test\agent\` (последните), `builds\test\quicksupport-diag\` (лог `info`, само за диагностика). Чек лист за повишаването: `builds\test\CHECKLIST-009-povishavane.md`. Всичко в `builds\` е gitignored.
 
 ## 3. Следваща стъпка — план за следващата сесия
 
@@ -39,40 +41,42 @@
 2. Прочети файловете от §1.
 3. Провери състоянието:
    ```powershell
-   git status -sb
+   git status -sb                     # очаквано: ahead на origin/main с commit-ите от 2026-10-26 вечерта
+   git diff origin/main --stat -- configs   # конфигът не трябва да е с тестови стойности (level "warn", idle 30, max 2)
    .\scripts\Reset-Vanilla.ps1        # трябва да каже "Already vanilla."
    ```
-4. С `001-app-name` build-ът пише в `%APPDATA%\ApisQuickSupport` (агентът — `%APPDATA%\ApisAgent`), не в `%APPDATA%\RustDesk`; архив вече не е нужен. Копие от 2026-10-26 стои в `builds\appdata-backup\` (gitignored).
+4. Push на непушнатите commit-и — **след одобрение** (secret scan: виж `PHASE1-common.md` §5).
 
-### 3.2 Фаза 2 — QuickSupport патчове (`patches/quicksupport/`)
+### 3.2 Отворено от Фаза 2 — повишаване на права (първо, ~30 мин)
 
-Ред (карта: `ARCHITECTURE.md` §6.2):
+Проблем: след „Повишаване“ + UAC „Да“ входът от агента работи, но картината при агента замръзва (две машини: клиент настолен Windows 10, агент лаптоп Windows 11). Анализ и логове: `PHASE2-quicksupport.md` §5.
 
-| # | Патч | Изисквания | Бележки за старта |
-|---|---|---|---|
-| 1 | `001-app-name` | C1 | ✅ 2026-10-26 (+ `common/039-custom-client-hardening`). Карта и странични ефекти на `is_custom_client()`: `PHASE2-quicksupport.md` §2. |
-| 2 | `002-disable-unattended` | A1 | ✅ 2026-10-26. Пътищата до авторизация: `PHASE2-quicksupport.md` §3. |
-| 3 | `003-consent-access-level` | A2, A9 | ✅ 2026-10-26. „Само гледане“ / „Пълен контрол“ / „Откажи“ в CM; клавиатурата стартира изключена. |
-| 4 | `004-no-connection-password` | A3 | ✅ 2026-10-26. Без еднократна парола; `approve-mode` винаги `click`; картата „Еднократна парола“ скрита. |
-| 5 | `005-connection-limits` | A4–A7 | ✅ 2026-10-26: съгласие 120 s, idle 30 мин, max 2 връзки, 3 прозореца/мин по ID и IP (token-и от `access.*`). |
-| 6 | `006-session-indicator` | A8 | ✅ 2026-10-26: CM не се минимизира, има бутон в лентата, показва време и ниво; „Прекъсни“. Рамката около екрана — отложена. |
-| 7 | `007-hide-all-settings` | L1–L3, §5 | ✅ 2026-10-26: upstream „incoming only“ + disable-settings/account/ab/change-id. L2 одит на опциите: `PHASE2-quicksupport.md`. |
-| 8 | `008-close-equals-exit` | F3, F6 | ✅ 2026-10-26: X на главния прозорец = изход (`exit(0)`), без скриване. |
-| 9 | `009-no-install` | F1, F2 | ✅ 2026-10-26: без инсталация и услуга (вкл. структурно в `platform/windows.rs`); „Повиши права“ само с UAC клик на клиента. |
+1. **Сравнение с upstream** (решаващо): официалният преносим RustDesk от rustdesk.com на същите две машини (публичните сървъри на RustDesk, без инсталация) → сесия → „Повишаване“ при клиента → UAC „Да“ → замръзва ли картината?
+   - **Да** → ограничение на upstream/средата. Решение с потребителя: да остане (работи там, където DXGI работи) или да се забрани изцяло (нов малък hunk в 009: `start_portable_service` → грешка и скрит бутон).
+   - **Не** → проблемът е в нашия build: diff на поведението; логът на SYSTEM процеса (засега липсва — да се намери къде пише или да се добави временен лог във файл).
+2. Видеокартата на клиента: Device Manager → Display adapters (при „Microsoft Basic Display Adapter“ DXGI заснемането обикновено не работи).
 
-`007` покрива и панела „Отдалечено управление“ + историята на сесиите в QS (QS е само контролиран). Общ `common/040-random-device-id` (F5) — 2026-10-26.
+### 3.3 Фаза 3 — QuickSupport branding (`ARCHITECTURE.md` §6.2, `010-branding-home`)
 
-Отворените UI точки за QuickSupport от `PHASE1-common.md` §6 вече имат патч: банерът „Инсталирай“ → 009, панелът „Отдалечено управление“ и историята → 007.
+- Header (двуреден, син, центриран): „АПИС Европа АД“ / „Система за дистанционна помощ“; лого „Силата на информацията“; terms-of-use панел с дословния текст и линковете от `REQUIREMENTS.md` Приложение А (B3, B5).
+- Текстът над ID-то („Вашата работна среда не може да бъде достъпена …“) — неточен, да се смени.
+- Икони (всички размери) и exe: `ApisQuickSupport.exe`, `Runner.rc` (ProductName / FileDescription / CompanyName — сега „RustDesk Remote Desktop“ / „Purslane Tech“ в Task Manager), иконата на прозореца и лентата (B1).
+- Статус „Готово“ — вече на български (А.4).
+- Нужни входни материали от потребителя: лого и икони (файлове), ако още не са в `assets/`.
 
-### 3.3 Работен цикъл за всеки патч (както във Фаза 1)
+### 3.4 Отворени точки (не са блокиращи)
 
-Картографиране → генериране от копия на pin-а (с предходните патчове, които пипат същите файлове) → `Apply-Patches` за двата продукта → `cargo check` (14 предупреждения от upstream, без нови) → build + проверка (мрежа/лог; визуално — от потребителя) → `Reset-Vanilla -Force` → docs + commit → secret scan → push след одобрение. Подробно: `PHASE1-common.md` §1 и §5.
+- **Одит към API сървъра:** при всяка връзка `Audit post dropped … status 404` — endpoint на сървъра или спиране на изпращането (решение с потребителя).
+- **F5 под Enigma (Фаза 4):** споделената памет при повишаване (`C:\ProgramData\ApisQuickSupport\portable_service_shmem\`), конфиг/лог на SYSTEM процеса.
+- **Агент (Фаза 5):** `is_outgoing_only()` (не приема връзки — затваря и switch-sides откъм агента), менютата TCP tunneling/RDP/Terminal/View camera и „повишаване с име и парола“ в агента.
+- Рамка около екрана по време на сесия (A8, по желание) — Фаза 3.
+- `--install-idd`, `--install-remote-printer` (драйвери, изискват администратор) — да се преценят във Фаза 4.
 
-### 3.4 Може да се направи паралелно / по-късно
+### 3.5 Работен цикъл за всеки патч
 
-- `scripts/Build-Product.ps1` (Reset → Apply → Build, вкл. връщане на `pubspec.lock` и външно пренасочване на изхода).
-- Skill `patch-workflow` (процесът от §3.3 е вече установен — може да се опише като skill).
-- Превод на новите съобщения за грешка; скриване на менютата TCP tunneling/RDP/Terminal/View camera в агента (Фаза 5).
+Картографиране (само четене) → `scripts\New-PatchScratch.ps1 -Dir <scratch> -MainFiles … -HbbFiles … [-Product none]` → редакция в scratch → `git diff` с **cmd** пренасочване в `patches\…` → `Apply-Patches` за **двата** продукта → `cargo check --lib --features flutter,hwcodec` (14 предупреждения от upstream) → `scripts\Build-Test.ps1` (`builds\test\<product>\`) → тест (визуален/на две машини — от потребителя; при много стъпки — чек лист в `builds\test\`) → `Reset-Vanilla -Force` → docs + commit → secret scan → push след одобрение.
+
+`Build-Test.ps1` е почистена версия на скрипта, ползван на 2026-10-26 — при първото пускане да се провери изходът.
 
 ## 4. Claude Code skills + hooks
 
@@ -85,7 +89,8 @@
 | `rustdesk-build` | skill | ✅ | Build стъпките + капаните от `PHASE0-baseline.md` |
 | Забрана за директни Edit/Write в `rustdesk-source/` | hook | ✅ | Налага „само през патчове" |
 | Блок на `cargo clean` и деструктивни git команди в `rustdesk-source/` | hook | ✅ | Пази `target/` кеша и чистотата на source-а |
-| `patch-workflow` | skill | предстои | Процесът от §3.3 |
+| `scripts/New-PatchScratch.ps1`, `scripts/Build-Test.ps1` | скриптове | ✅ 2026-10-26 | Основата за `patch-workflow` |
+| `patch-workflow` | skill | предстои | Процесът от §3.5 |
 | `session-handoff` | skill | предстои | В края на сесия: обнови този файл + commit |
 | `security-check` | skill | предстои | Чеклист срещу REQUIREMENTS (A1, N3, P1–P15) — патч да не отваря премахнат код-път |
 
@@ -94,11 +99,14 @@
 ## 5. Важни напомняния
 
 - `rustdesk-source/` се пипа САМО през патчове; `rustdesk-source/target/` е кеш — без `cargo clean` без одобрение.
-- Тайните (сървър/ключ) не влизат в repo — винаги през `secrets.json`; в docs и отговори адресът се маскира.
-- Commit след всяка успешна стъпка (restore точки); push — след одобрение. UI текстове на български; код/commits на английски.
+- Тайните (сървър/ключ) не влизат в repo — винаги през `secrets.json`; в docs и отговори адресът се маскира. Нов патч се генерира от **token-формата** на предходните (`New-PatchScratch.ps1`), никога от приложения source.
+- Commit след всяка успешна стъпка (restore точки); push — след одобрение. UI текстове на български; код/commits на английски. Общуването с потребителя — на български.
+- **Тестови стойности в конфига** (`-TestLimits`, `-LogLevel`) се връщат във `finally`; ако команда бъде прекъсната, преди commit провери `git status -- configs` (на 2026-10-26 прекъсната команда остави `level: info` в конфига и той влезе в commit — коригирано преди push).
 - Проектът е легитимен (виж `REQUIREMENTS.md` раздели 0 и 10): поддръжка със съгласие, без unattended. Формулирай работата конкретно и технически.
 
 ## 6. Среда (напомняне)
 
 - `$env:VCPKG_ROOT = 'C:\src\ApisSupport\vcpkg'`, `$env:VCPKG_DEFAULT_HOST_TRIPLET = 'x64-windows-static'`, `$env:LIBCLANG_PATH = 'C:\Program Files\LLVM\bin'` (build скриптът ги задава сам).
 - Windows / PowerShell 5.1. Build е тежък (минути) — пускай във фон, с пренасочване на изхода **отвън** (`powershell -File ... > log 2>&1`).
+- Капани в PowerShell 5.1: `>` пише UTF-16 → за патчове `cmd /c "git diff > file"`; масив от един елемент се „разлива“ по символи при splat → `List[string]`; here-string към `git commit -F -` не стига до stdin → съобщение от файл (`-F file`); stderr предупреждения на git + `$ErrorActionPreference='Stop'` → грешка (проверявай `$LASTEXITCODE`).
+- Тест на една машина: QS и агентът от `builds\test\` (различни APP_NAME и ID); огледалният образ е само визуален — кликът върху „Старт“ в отдалечения образ показва дали входът стига.

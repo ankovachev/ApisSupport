@@ -1,0 +1,23 @@
+diff --git a/flutter/lib/desktop/widgets/tabbar_widget.dart b/flutter/lib/desktop/widgets/tabbar_widget.dart
+index 234a90b..954a54f 100644
+--- a/flutter/lib/desktop/widgets/tabbar_widget.dart
++++ b/flutter/lib/desktop/widgets/tabbar_widget.dart
+@@ -1,5 +1,6 @@
+ import 'dart:async';
+ import 'dart:math';
++import 'dart:io' show exit;
+ import 'dart:ui' as ui;
+ 
+ import 'package:bot_toast/bot_toast.dart';
+@@ -467,6 +468,11 @@ class _DesktopTabState extends State<DesktopTab>
+ 
+     await _saveFrame(flush: true);
+ 
++    // Apis (F3, F6): QuickSupport has no tray to come back from, so closing the main window
++    // ends the program, as the "Quit" button does.
++    if (isMainWindow && bind.isIncomingOnly()) {
++      exit(0);
++    }
+     // hide window on close
+     if (isMainWindow) {
+       if (rustDeskWinManager.getActiveWindows().contains(kMainWindowId)) {

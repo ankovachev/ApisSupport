@@ -1,0 +1,53 @@
+diff --git a/src/config.rs b/src/config.rs
+index c4ce4d8..cd5a3fb 100644
+--- a/src/config.rs
++++ b/src/config.rs
+@@ -1211,7 +1211,10 @@ impl Config {
+             .unwrap_or(false)
+     }
+ 
++    #[allow(unreachable_code)]
+     pub fn is_disable_change_id() -> bool {
++        // Apis (L3): the ID cannot be changed by hand (it is random per config, common/040).
++        return true;
+         BUILTIN_SETTINGS
+             .read()
+             .unwrap()
+@@ -2824,7 +2827,10 @@ fn is_option_can_save(
+ }
+ 
+ #[inline]
++#[allow(unreachable_code)]
+ pub fn is_incoming_only() -> bool {
++    // Apis (§5): QuickSupport is only ever controlled: no connect panel, no outgoing sessions.
++    return true;
+     HARD_SETTINGS
+         .read()
+         .unwrap()
+@@ -2856,17 +2862,26 @@ pub fn is_disable_tcp_listen() -> bool {
+ }
+ 
+ #[inline]
++#[allow(unreachable_code)]
+ pub fn is_disable_settings() -> bool {
++    // Apis (L1, L2): no settings in the UI and none from the command line.
++    return true;
+     is_some_hard_opton("disable-settings")
+ }
+ 
+ #[inline]
++#[allow(unreachable_code)]
+ pub fn is_disable_ab() -> bool {
++    // Apis (L1): no address book.
++    return true;
+     is_some_hard_opton("disable-ab")
+ }
+ 
+ #[inline]
++#[allow(unreachable_code)]
+ pub fn is_disable_account() -> bool {
++    // Apis (L1): no account login.
++    return true;
+     is_some_hard_opton("disable-account")
+ }
+ 

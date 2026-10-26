@@ -22,7 +22,7 @@
 |---|---|---|
 | 0 — setup + vanilla baseline | ✅ | [`PHASE0-baseline.md`](PHASE0-baseline.md) |
 | 1 — общи патчове (`patches/common/`) | ✅ | [`PHASE1-common.md`](PHASE1-common.md) |
-| 2 — QuickSupport патчове | ▶ в ход (`001`–`006` ✅) | [`PHASE2-quicksupport.md`](PHASE2-quicksupport.md), §3 по-долу |
+| 2 — QuickSupport патчове | ▶ в ход (`001`–`007` ✅) | [`PHASE2-quicksupport.md`](PHASE2-quicksupport.md), §3 по-долу |
 | 3–7 | предстоят | `ARCHITECTURE.md` §8 |
 
 - **Repo:** `main` = `origin/main` (https://github.com/ankovachev/ApisSupport), локално има commit-и за `001-app-name` / `039` (push — след одобрение).
@@ -56,7 +56,7 @@
 | 4 | `004-no-connection-password` | A3 | ✅ 2026-10-26. Без еднократна парола; `approve-mode` винаги `click`; картата „Еднократна парола“ скрита. |
 | 5 | `005-connection-limits` | A4–A7 | ✅ 2026-10-26: съгласие 120 s, idle 30 мин, max 2 връзки, 3 прозореца/мин по ID и IP (token-и от `access.*`). |
 | 6 | `006-session-indicator` | A8 | ✅ 2026-10-26: CM не се минимизира, има бутон в лентата, показва време и ниво; „Прекъсни“. Рамката около екрана — отложена. |
-| 7 | `007-hide-all-settings` | L1–L3, §5 | Вкл. превключвателите в CM за block-input/privacy и др.; about/privacy линковете към rustdesk.com; панел „Отдалечено управление“ и история/любими/адресна книга в QS. |
+| 7 | `007-hide-all-settings` | L1–L3, §5 | ✅ 2026-10-26: upstream „incoming only“ + disable-settings/account/ab/change-id. L2 одит на опциите: `PHASE2-quicksupport.md`. |
 | 8 | `008-close-equals-exit` | F3 | Затваряне = край на процеса (без tray). |
 | 9 | `009-no-install` | F1, F2 | Добавен 2026-10-26: банер „Инсталирай“, install/service пътища; „Повиши права“. |
 

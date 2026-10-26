@@ -16,18 +16,18 @@
 
 Каноничните docs надделяват над всяко устно допускане.
 
-## 2. Къде сме (към 2026-10-25, вечер)
+## 2. Къде сме (към 2026-10-26, сутрин)
 
 | Фаза | Състояние | Детайли |
 |---|---|---|
 | 0 — setup + vanilla baseline | ✅ | [`PHASE0-baseline.md`](PHASE0-baseline.md) |
 | 1 — общи патчове (`patches/common/`) | ✅ | [`PHASE1-common.md`](PHASE1-common.md) |
-| 2 — QuickSupport патчове | ⏭ следваща | §3 по-долу |
+| 2 — QuickSupport патчове | ▶ в ход (`001-app-name` ✅) | [`PHASE2-quicksupport.md`](PHASE2-quicksupport.md), §3 по-долу |
 | 3–7 | предстоят | `ARCHITECTURE.md` §8 |
 
-- **Repo:** `main` = `origin/main` (https://github.com/ankovachev/ApisSupport), последен commit `d23e1f4`. Нищо незаписано.
+- **Repo:** `main` = `origin/main` (https://github.com/ankovachev/ApisSupport), локално има commit-и за `001-app-name` / `039` (push — след одобрение).
 - **Source:** `rustdesk-source/` чист, на pin-а (RustDesk 1.5.0 `fada664` + hbb_common `229b9045`). `target/` кешът е топъл (incremental `cargo check` ~11 s, build ~5–7 мин).
-- **Готово във Фаза 1:** scripts `Reset-Vanilla` / `Apply-Patches` / `Common`; 14 общи патча (001–003, 010, 011, 020, 030, 031, 033–038; 032 не е нужен). Приложението говори само с нашия сървър, на български, светла тема, без „RustDesk“ в текстовете, без LAN discovery / direct IP / tunneling / WebRTC / proxy / update check, с отказани опасни права и минимален лог.
+- **Готово във Фаза 1:** scripts `Reset-Vanilla` / `Apply-Patches` / `Common`; 14 общи патча (001–003, 010, 011, 020, 030, 031, 033–038; 032 не е нужен) + `039` (добавен 2026-10-26). Приложението говори само с нашия сървър, на български, светла тема, без „RustDesk“ в текстовете, без LAN discovery / direct IP / tunneling / WebRTC / proxy / update check, с отказани опасни права и минимален лог.
 - **Сървър:** поправени веригата на TLS сертификата, правата на частния ключ и дублираният nginx config (виж `PHASE1-common.md` §4).
 - **Нови изисквания:** P14 (remote terminal — забранен), P15 (remote restart — забранен); уточнени P1–P4 и P12.
 
@@ -42,7 +42,7 @@
    git status -sb
    .\scripts\Reset-Vanilla.ps1        # трябва да каже "Already vanilla."
    ```
-4. **Преди първия тест с build:** архивирай `%APPDATA%\RustDesk` (докато няма `001-app-name`, build-ът пише там) и го възстанови след теста. Копието от предишната сесия не е запазено.
+4. С `001-app-name` build-ът пише в `%APPDATA%\ApisQuickSupport` (агентът — `%APPDATA%\ApisAgent`), не в `%APPDATA%\RustDesk`; архив вече не е нужен. Копие от 2026-10-26 стои в `builds\appdata-backup\` (gitignored).
 
 ### 3.2 Фаза 2 — QuickSupport патчове (`patches/quicksupport/`)
 
@@ -50,7 +50,7 @@
 
 | # | Патч | Изисквания | Бележки за старта |
 |---|---|---|---|
-| 1 | `001-app-name` | C1 | **Първи**, защото изолира от инсталиран RustDesk (`%APPDATA%\ApisQuickSupport`, IPC pipe, mutex) и спира нуждата от архив на `%APPDATA%\RustDesk`. Да се картографира: `hbb_common::config::APP_NAME` (сега `"RustDesk"`), името на exe/runner във `flutter/windows/` и `build.py`, и **страничните ефекти на `is_custom_client()`** (става `true`, щом APP_NAME ≠ „RustDesk“ — upstream включва „custom client“ поведения). Token `{{APP_NAME}}` вече съществува. |
+| 1 | `001-app-name` | C1 | ✅ 2026-10-26 (+ `common/039-custom-client-hardening`). Карта и странични ефекти на `is_custom_client()`: `PHASE2-quicksupport.md` §2. |
 | 2 | `002-disable-unattended` | A1 | Структурно: permanent password / unattended код-пътят изцяло. Най-важният security патч (`ARCHITECTURE.md` §9). |
 | 3 | `003-consent-access-level` | A2, A9 | Popup Приеми/Откажи + „Само гледане“ / „Пълен контрол“. Upstream има опция `access-mode` (`full`/`view`) в `is_permission_enabled_locally` — отправна точка. Тук може да се реши и file transfer прозорецът (P1). |
 | 4 | `004-no-connection-password` | A3 | Без еднократна/постоянна парола в UI и в проверката. |

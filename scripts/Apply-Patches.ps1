@@ -49,6 +49,8 @@ $tokens = [ordered]@{
     LOG_RETENTION_DAYS = "$($config.logging.max_local_retention_days)"
 }
 if ($tokens.LOG_LEVEL -notin 'error', 'warn', 'info', 'debug', 'trace') { throw "logging.level must be error|warn|info|debug|trace" }
+# APP_NAME becomes folder, IPC pipe and URI scheme names; upstream assumes alphanumerics and hyphen.
+if ($tokens.APP_NAME -cnotmatch '^[A-Za-z][A-Za-z0-9-]{0,63}$') { throw "branding.app_name must be letters, digits and hyphens" }
 if ($tokens.LOG_RETENTION_DAYS -notmatch '^[1-9][0-9]{0,2}$') { throw "logging.max_local_retention_days must be 1-999" }
 foreach ($t in $tokens.GetEnumerator()) {
     if ([string]::IsNullOrWhiteSpace($t.Value)) { throw "Token {{$($t.Key)}} has no value in the configs" }

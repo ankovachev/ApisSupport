@@ -1,0 +1,61 @@
+diff --git a/flutter/lib/desktop/pages/server_page.dart b/flutter/lib/desktop/pages/server_page.dart
+index 8922165..420aa1f 100644
+--- a/flutter/lib/desktop/pages/server_page.dart
++++ b/flutter/lib/desktop/pages/server_page.dart
+@@ -548,7 +548,17 @@ class _CmHeaderState extends State<_CmHeader>
+                           ),
+                           style: TextStyle(color: Colors.white),
+                         ),
+-                      )
++                      ),
++                    // Apis (A8): the access level is always shown; it follows the keyboard toggle
++                    // because the timer rebuilds this every second.
++                    if (client.authorized && !client.disconnected)
++                      Obx(() {
++                        _time.value;
++                        return Text(
++                          client.keyboard ? ' · Пълен контрол' : ' · Само гледане',
++                          style: TextStyle(color: Colors.white),
++                        );
++                      }),
+                   ],
+                 ))
+               ],
+@@ -1023,7 +1033,7 @@ class _CmControlPanel extends StatelessWidget {
+             color: MyTheme.accent,
+             onClick: () {
+               handleElevate(context);
+-              windowManager.minimize();
++              // Apis (A8): the session window stays visible.
+             },
+             icon: Icon(
+               Icons.security_rounded,
+diff --git a/flutter/lib/models/server_model.dart b/flutter/lib/models/server_model.dart
+index 031a625..f577057 100644
+--- a/flutter/lib/models/server_model.dart
++++ b/flutter/lib/models/server_model.dart
+@@ -579,7 +579,8 @@ class ServerModel with ChangeNotifier {
+       if (!hideCm) windowOnTop(null);
+     });
+     // Only do the hidden task when on Desktop.
+-    if (client.authorized && isDesktop) {
++    // Apis (A8): the session window is not minimized after a connection is accepted.
++    if (false && client.authorized && isDesktop) {
+       cmHiddenTimer = Timer(const Duration(seconds: 3), () {
+         if (!hideCm) windowManager.minimize();
+         cmHiddenTimer = null;
+diff --git a/flutter/windows/runner/main.cpp b/flutter/windows/runner/main.cpp
+index 747d6f5..668b775 100644
+--- a/flutter/windows/runner/main.cpp
++++ b/flutter/windows/runner/main.cpp
+@@ -175,7 +175,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
+   } else {
+     window_title = app_name;
+   }
+-  if (!window.CreateAndShow(window_title, origin, size, !is_cm_page)) {
++  // Apis (A8): the connection manager keeps a taskbar button, so a running session cannot be
++  // hidden by minimizing its window.
++  if (!window.CreateAndShow(window_title, origin, size, true)) {
+       return EXIT_FAILURE;
+   }
+   window.SetQuitOnClose(true);

@@ -1,5 +1,5 @@
 diff --git a/flutter/lib/desktop/pages/server_page.dart b/flutter/lib/desktop/pages/server_page.dart
-index eeb51b6..14e1581 100644
+index eeb51b6..8922165 100644
 --- a/flutter/lib/desktop/pages/server_page.dart
 +++ b/flutter/lib/desktop/pages/server_page.dart
 @@ -1069,6 +1069,8 @@ class _CmControlPanel extends StatelessWidget {
@@ -11,7 +11,7 @@ index eeb51b6..14e1581 100644
      final bool canElevate = bind.cmCanElevate();
      final model = Provider.of<ServerModel>(context);
      final showElevation = canElevate &&
-@@ -1133,6 +1135,56 @@ class _CmControlPanel extends StatelessWidget {
+@@ -1133,6 +1135,54 @@ class _CmControlPanel extends StatelessWidget {
      ).marginOnly(bottom: buttonBottomMargin);
    }
  
@@ -29,7 +29,6 @@ index eeb51b6..14e1581 100644
 +                color: MyTheme.accent,
 +                onClick: () {
 +                  handleAccept(context);
-+                  windowManager.minimize();
 +                },
 +                text: 'Само гледане',
 +                textColor: Colors.white,
@@ -45,7 +44,6 @@ index eeb51b6..14e1581 100644
 +                      connId: client.id, name: "keyboard", enabled: true);
 +                  client.keyboard = true;
 +                  handleAccept(context);
-+                  windowManager.minimize();
 +                },
 +                text: 'Пълен контрол',
 +                textColor: Colors.white,

@@ -122,6 +122,7 @@ ApisSupport/                      # ново, самостоятелно repo
 | `038-logging-hardening` | P13 | Ниско ниво, кратка retention, redaction |
 | `039-custom-client-hardening` | C1, L2, N3, A8 | Игнорира custom-client конфиг (`custom.txt` / подаден при старт) — иначе може да смени APP_NAME и да наложи default/override/hard настройки; `hide_cm()` → винаги `false` (CM не се скрива; upstream го позволява само за custom client) |
 | `040-random-device-id` | F5, C1 | Случайно ID вместо производното от MAC адреса (иначе: едно и също ID при всяко стартиране въпреки виртуализацията, еднакво ID за QS и агента на една машина, хардуерен идентификатор пред трети лица) |
+| `041-apis-messages-bg` | B2, A4 | Bg превод на съобщенията на QS към контролиращия (ключове на английски; „not allowed“ в ключа спира автоматичното повторно свързване) |
 
 ### 6.2 QuickSupport патчове (`quicksupport/`)
 

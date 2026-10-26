@@ -24,6 +24,7 @@
 | `{{APP_NAME}}` | `branding.app_name` (само букви, цифри, тире) | `quicksupport/001`, `agent/001` |
 | `{{DISPLAY_NAME}}`, `{{WINDOW_TITLE}}` | `branding.display_name`, `branding.window_title` | 020 |
 | `{{LOG_LEVEL}}`, `{{LOG_RETENTION_DAYS}}` | `logging.level`, `logging.max_local_retention_days` | 038 |
+| `{{CONSENT_TIMEOUT_SECONDS}}`, `{{IDLE_DISCONNECT_MINUTES}}`, `{{MAX_CONNECTIONS}}`, `{{MAX_CONSENT_PROMPTS_PER_MINUTE}}` | `access.*` (цели числа с граници; по избор — грешка само ако патч ги ползва без стойност) | `quicksupport/005` |
 
 Стойностите отиват директно в низове в Rust/Dart код → скриптът отказва кавички, `\` и нов ред; `LOG_LEVEL` ∈ error/warn/info/debug/trace; retention 1–999. Ако `secrets.json` още съдържа стойностите от шаблона — отказ.
 
@@ -61,6 +62,7 @@
 | `038-logging-hardening` (hbb) | P13, L2 | Ниво `{{LOG_LEVEL}}` (warn), `RUST_LOG` не може да го вдигне; retention `{{LOG_RETENTION_DAYS}}` (7) вместо 90; IP адресите → `<ip>` | Release build с `RUST_LOG=trace`: 4 реда WARN/ERROR, 0 IP ✅ |
 | `039-custom-client-hardening` (+hbb) | C1, L2, N3, A8 | *Добавен 2026-10-26, заедно с `001-app-name` от Фаза 2.* `read_custom_client()` → нищо (подписан `custom.txt` до exe-то иначе сменя APP_NAME и налага настройки); `hide_cm()` → `false` (става достъпен по IPC, щом `is_custom_client()` е true) | `cargo check` ✅ |
 | `040-random-device-id` (hbb) | F5, C1 | *Добавен 2026-10-26.* `get_auto_id()` → случайно 10-цифрено ID (както upstream на Android/iOS) вместо производното от MAC адреса. Без виртуализация ID-то се пази в конфига; с празна конфигурация (Enigma) — ново при всяко стартиране | Release build, празни конфигурации: QS и агентът на една машина → различни 10-цифрени ID (преди: и двата `501 818 368`) ✅ |
+| `041-apis-messages-bg` | B2, A4 | *Добавен 2026-10-26.* Български превод на съобщенията, които QS (`quicksupport/005`) праща на контролиращия. Ключовете са на английски, защото контролиращият решава дали да се свърже отново сам по текста на ключа (`check_if_retry` в `src/client.rs`: без „not allowed“/„manually“ … → нов опит); затова ключът за изтекло съгласие съдържа „not allowed“. Преводът трябва да е и в агента (той показва текста) → общ патч | Две машини: при изтекло съгласие агентът показва bg текста и не се свързва отново ✅ |
 
 Общите точки, които по-късните патчове ползват: `Connection::permission()` в `src/server/connection.rs` (всички права на контролираната страна) и `SwitchPermission` handler-ът (превключватели от CM по време на сесия).
 

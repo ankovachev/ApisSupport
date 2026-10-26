@@ -21,7 +21,7 @@
 | Token | Източник | Ползван в |
 |---|---|---|
 | `{{SERVER}}`, `{{PUBLIC_KEY}}`, `{{API_SERVER}}` | `secrets.json` (gitignored) | 001 |
-| `{{APP_NAME}}` | `branding.app_name` | (Фаза 2: `quicksupport/001`, `agent/001`) |
+| `{{APP_NAME}}` | `branding.app_name` (само букви, цифри, тире) | `quicksupport/001`, `agent/001` |
 | `{{DISPLAY_NAME}}`, `{{WINDOW_TITLE}}` | `branding.display_name`, `branding.window_title` | 020 |
 | `{{LOG_LEVEL}}`, `{{LOG_RETENTION_DAYS}}` | `logging.level`, `logging.max_local_retention_days` | 038 |
 
@@ -59,6 +59,7 @@
 | `036-disable-auto-update-telemetry` | P11 | `do_check_software_update()` → без заявка (единствената връзка към `api.rustdesk.com`; покрива ръчна проверка и auto-update) | За 40 s в DNS кеша **само нашия сървър** ✅ |
 | `037-security-defaults` | P1–P4, P12, P14, P15 | `permission()` отказва audio, recording, terminal, remote printer, remote restart; clipboard и file transfer изключени при свързване. CM не може да включи audio/recording/restart/block_input/privacy_mode | `cargo check` ✅; runtime → Фаза 4 |
 | `038-logging-hardening` (hbb) | P13, L2 | Ниво `{{LOG_LEVEL}}` (warn), `RUST_LOG` не може да го вдигне; retention `{{LOG_RETENTION_DAYS}}` (7) вместо 90; IP адресите → `<ip>` | Release build с `RUST_LOG=trace`: 4 реда WARN/ERROR, 0 IP ✅ |
+| `039-custom-client-hardening` (+hbb) | C1, L2, N3, A8 | *Добавен 2026-10-26, заедно с `001-app-name` от Фаза 2.* `read_custom_client()` → нищо (подписан `custom.txt` до exe-то иначе сменя APP_NAME и налага настройки); `hide_cm()` → `false` (става достъпен по IPC, щом `is_custom_client()` е true) | `cargo check` ✅ |
 
 Общите точки, които по-късните патчове ползват: `Connection::permission()` в `src/server/connection.rs` (всички права на контролираната страна) и `SwitchPermission` handler-ът (превключватели от CM по време на сесия).
 

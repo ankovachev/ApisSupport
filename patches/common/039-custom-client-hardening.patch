@@ -1,0 +1,16 @@
+diff --git a/src/common.rs b/src/common.rs
+index 83637ff..016e2b9 100644
+--- a/src/common.rs
++++ b/src/common.rs
+@@ -2464,7 +2464,11 @@ pub fn get_dst_align_rgba() -> usize {
+     1
+ }
+ 
++#[allow(unreachable_code, unused_variables)]
+ pub fn read_custom_client(config: &str) {
++    // Apis (C1, L2, N3): no custom-client config (custom.txt or passed in); it could rename
++    // APP_NAME and set default/override/hard settings around the built-in ones.
++    return;
+     let Ok(data) = decode64(config) else {
+         log::error!("Failed to decode custom client config");
+         return;

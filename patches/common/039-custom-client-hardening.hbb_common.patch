@@ -1,0 +1,15 @@
+diff --git a/src/password_security.rs b/src/password_security.rs
+index 3f5f324..eb7ab03 100644
+--- a/src/password_security.rs
++++ b/src/password_security.rs
+@@ -85,7 +85,10 @@ pub fn approve_mode() -> ApproveMode {
+     }
+ }
+ 
++#[allow(unreachable_code)]
+ pub fn hide_cm() -> bool {
++    // Apis (A8): the connection manager is never hidden while a session runs.
++    return false;
+     approve_mode() == ApproveMode::Password
+         && verification_method() == VerificationMethod::OnlyUsePermanentPassword
+         && crate::config::option2bool("allow-hide-cm", &Config::get_option("allow-hide-cm"))

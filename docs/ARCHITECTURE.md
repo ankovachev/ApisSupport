@@ -120,6 +120,7 @@ ApisSupport/                      # ново, самостоятелно repo
 | `036-disable-auto-update-telemetry` | P11 | Auto-update, telemetry, crash reports off |
 | `037-security-defaults` | P1-P4, P12, P14, P15 | audio/recording/terminal/remote printer/remote restart забранени (вкл. от CM); clipboard и file transfer изключени при свързване, клиентът може да ги включи за сесията от CM; IPv6 — без отделен патч (виж REQUIREMENTS) |
 | `038-logging-hardening` | P13 | Ниско ниво, кратка retention, redaction |
+| `039-custom-client-hardening` | C1, L2, N3, A8 | Игнорира custom-client конфиг (`custom.txt` / подаден при старт) — иначе може да смени APP_NAME и да наложи default/override/hard настройки; `hide_cm()` → винаги `false` (CM не се скрива; upstream го позволява само за custom client) |
 
 ### 6.2 QuickSupport патчове (`quicksupport/`)
 

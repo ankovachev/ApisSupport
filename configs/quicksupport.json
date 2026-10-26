@@ -32,9 +32,9 @@
     "require_explicit_consent": true,
     "consent_access_levels": ["view_only", "full_control"],
     "max_simultaneous_connections": 2,
-    "connection_prompt_timeout_seconds": 60,
-    "idle_disconnect_minutes": 15,
-    "max_failed_attempts_per_minute": 3
+    "connection_prompt_timeout_seconds": 120,
+    "idle_disconnect_minutes": 30,
+    "max_consent_prompts_per_minute": 3
   },
   "features": {
     "file_transfer_enabled": false,

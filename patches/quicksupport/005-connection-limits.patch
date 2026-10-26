@@ -1,0 +1,112 @@
+diff --git a/src/server/connection.rs b/src/server/connection.rs
+index ec40124..73f3f83 100644
+--- a/src/server/connection.rs
++++ b/src/server/connection.rs
+@@ -84,7 +84,8 @@ const ID_WHITELIST_FAILURE_DECAY_MINUTES: i32 = 10;
+ /// keeps itself: a wrong password, a pending 2FA, an accept prompt or an admin-terminal
+ /// credential prompt still unanswered. The controller reconnects on its own and the prompt
+ /// comes back. A connection that says nothing at all goes at the 30 s idle timeout already.
+-const LOGIN_GRACE: Duration = Duration::from_secs(180);
++// Apis (A4): an unanswered consent window closes after this many seconds.
++const LOGIN_GRACE: Duration = Duration::from_secs({{CONSENT_TIMEOUT_SECONDS}});
+ /// Connections between accept and authorization, across every transport: the resource bound.
+ /// At this many a further arrival is refused and the oldest is told to go, one at a time.
+ const MAX_UNAUTHORIZED_CONNS: usize = 64;
+@@ -183,6 +184,49 @@ async fn login_deadline(authorized: bool, started: Instant) {
+     time::sleep_until(started + LOGIN_GRACE).await
+ }
+ 
++// Apis: translated on the controller (common/041); "not allowed" in the key stops the
++// controller's automatic reconnect (check_if_retry), whatever client it is.
++const APIS_MSG_CONSENT_TIMEOUT: &str = "Consent request not answered, reconnect not allowed";
++const APIS_MSG_BUSY: &str = "The client already has the maximum number of sessions";
++const APIS_MSG_TOO_MANY_PROMPTS: &str = "Too many access requests, try again in a minute";
++
++// Apis (A6): at most this many sessions at once; a further one is refused as busy.
++fn apis_session_limit_reached() -> bool {
++    AUTHED_CONNS.lock().unwrap().len() >= {{MAX_CONNECTIONS}}
++}
++
++lazy_static::lazy_static! {
++    // Apis (A7): when recent consent windows were shown, by controller ID and by address.
++    static ref APIS_CONSENT_PROMPTS: Mutex<std::collections::HashMap<String, Vec<Instant>>> =
++        Default::default();
++}
++
++// Apis (A7): at most this many consent windows a minute per controller ID and per address
++// (the ID is whatever the controller reports, so the address limit is the one that holds).
++// Records the window when it is allowed.
++fn apis_consent_rate_exceeded(peer_id: &str, ip: &str) -> bool {
++    const WINDOW: Duration = Duration::from_secs(60);
++    let mut prompts = APIS_CONSENT_PROMPTS.lock().unwrap();
++    prompts.retain(|_, times| {
++        times.retain(|t| t.elapsed() < WINDOW);
++        !times.is_empty()
++    });
++    let mut keys = vec![format!("id:{peer_id}")];
++    if !ip.is_empty() {
++        keys.push(format!("ip:{ip}"));
++    }
++    if keys
++        .iter()
++        .any(|k| prompts.get(k).map_or(0, |t| t.len()) >= {{MAX_CONSENT_PROMPTS_PER_MINUTE}})
++    {
++        return true;
++    }
++    for k in keys {
++        prompts.entry(k).or_default().push(Instant::now());
++    }
++    false
++}
++
+ lazy_static::lazy_static! {
+     // Connections between accept and authorization, oldest first; see admit_unauthorized.
+     static ref UNAUTHORIZED_CONNS: Mutex<Vec<(i32, IpAddr, Arc<UnauthorizedShared>)>> = Default::default();
+@@ -743,12 +787,19 @@ impl Connection {
+                     break;
+                 }
+                 _ = login_deadline(conn.authorized, started) => {
++                    // Apis (A4): the controller is told not to retry, so the window does not come back.
++                    conn.send_close_reason_no_retry(APIS_MSG_CONSENT_TIMEOUT).await;
+                     conn.on_close("Timeout", true).await;
+                     break;
+                 }
+                 Some(data) = rx_from_cm.recv() => {
+                     match data {
+                         ipc::Data::Authorize => {
++                            // Apis (A6): the limit may have filled while the consent window was open.
++                            if apis_session_limit_reached() {
++                                conn.send_login_error(APIS_MSG_BUSY).await;
++                                break;
++                            }
+                             conn.set_conn_audit_primary_auth(ConnAuditPrimaryAuth::Click);
+                             conn.require_2fa.take();
+                             if !conn.send_logon_response_and_keep_alive().await {
+@@ -2931,6 +2982,15 @@ impl Connection {
+             if !self.check_id_whitelist().await {
+                 return false;
+             }
++            // Apis (A6, A7): refused before any consent window is shown.
++            if apis_session_limit_reached() {
++                self.send_login_error(APIS_MSG_BUSY).await;
++                return false;
++            }
++            if apis_consent_rate_exceeded(&lr.my_id, &self.ip) {
++                self.send_login_error(APIS_MSG_TOO_MANY_PROMPTS).await;
++                return false;
++            }
+             match lr.union {
+                 Some(login_request::Union::FileTransfer(ft)) => {
+                     if !Self::permission(
+@@ -5688,7 +5748,11 @@ impl Connection {
+         self.pressed_modifiers.clear();
+     }
+ 
++    #[allow(unreachable_code)]
+     fn get_auto_disconenct_timer() -> Option<(Instant, u64)> {
++        // Apis (A5): always on; no input or chat from the controller for this many minutes ends
++        // the session, and a new one needs consent again.
++        return Some((Instant::now(), {{IDLE_DISCONNECT_MINUTES}}));
+         if Config::get_option("allow-auto-disconnect") == "Y" {
+             let mut minute: u64 = Config::get_option("auto-disconnect-timeout")
+                 .parse()

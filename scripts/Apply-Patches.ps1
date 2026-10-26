@@ -48,6 +48,22 @@ $tokens = [ordered]@{
     LOG_LEVEL          = "$($config.logging.level)"
     LOG_RETENTION_DAYS = "$($config.logging.max_local_retention_days)"
 }
+# Session limits exist only for the controlled product; a token without a value is an error
+# only if one of the product's patches uses it (see the unresolved-token check below).
+$limits = [ordered]@{
+    CONSENT_TIMEOUT_SECONDS        = @($config.access.connection_prompt_timeout_seconds, 10, 3600)
+    IDLE_DISCONNECT_MINUTES        = @($config.access.idle_disconnect_minutes, 1, 1440)
+    MAX_CONNECTIONS                = @($config.access.max_simultaneous_connections, 1, 16)
+    MAX_CONSENT_PROMPTS_PER_MINUTE = @($config.access.max_consent_prompts_per_minute, 1, 60)
+}
+foreach ($l in $limits.GetEnumerator()) {
+    $v, $min, $max = $l.Value
+    if ($null -eq $v) { continue }
+    if ("$v" -notmatch '^[0-9]{1,4}$' -or [int]$v -lt $min -or [int]$v -gt $max) {
+        throw "Token {{$($l.Key)}} must be an integer $min-$max"
+    }
+    $tokens[$l.Key] = "$v"
+}
 if ($tokens.LOG_LEVEL -notin 'error', 'warn', 'info', 'debug', 'trace') { throw "logging.level must be error|warn|info|debug|trace" }
 # APP_NAME becomes folder, IPC pipe and URI scheme names; upstream assumes alphanumerics and hyphen.
 if ($tokens.APP_NAME -cnotmatch '^[A-Za-z][A-Za-z0-9-]{0,63}$') { throw "branding.app_name must be letters, digits and hyphens" }
@@ -72,7 +88,7 @@ $staged = foreach ($p in $patches) {
     $text = [IO.File]::ReadAllText($p.FullName)
     foreach ($t in $tokens.GetEnumerator()) { $text = $text.Replace("{{$($t.Key)}}", $t.Value) }
     $unresolved = [regex]::Matches($text, '\{\{[A-Z0-9_]+\}\}') | ForEach-Object Value | Sort-Object -Unique
-    if ($unresolved) { throw "$($p.Directory.Name)/$($p.Name): unknown token(s) $($unresolved -join ', ')" }
+    if ($unresolved) { throw "$($p.Directory.Name)/$($p.Name): unknown or unset token(s) $($unresolved -join ', ')" }
 
     $out = Join-Path $staging "$($p.Directory.Name)-$($p.Name)"
     [IO.File]::WriteAllText($out, $text, $utf8NoBom)

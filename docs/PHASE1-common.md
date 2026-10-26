@@ -60,6 +60,7 @@
 | `037-security-defaults` | P1–P4, P12, P14, P15 | `permission()` отказва audio, recording, terminal, remote printer, remote restart; clipboard и file transfer изключени при свързване. CM не може да включи audio/recording/restart/block_input/privacy_mode | `cargo check` ✅; runtime → Фаза 4 |
 | `038-logging-hardening` (hbb) | P13, L2 | Ниво `{{LOG_LEVEL}}` (warn), `RUST_LOG` не може да го вдигне; retention `{{LOG_RETENTION_DAYS}}` (7) вместо 90; IP адресите → `<ip>` | Release build с `RUST_LOG=trace`: 4 реда WARN/ERROR, 0 IP ✅ |
 | `039-custom-client-hardening` (+hbb) | C1, L2, N3, A8 | *Добавен 2026-10-26, заедно с `001-app-name` от Фаза 2.* `read_custom_client()` → нищо (подписан `custom.txt` до exe-то иначе сменя APP_NAME и налага настройки); `hide_cm()` → `false` (става достъпен по IPC, щом `is_custom_client()` е true) | `cargo check` ✅ |
+| `040-random-device-id` (hbb) | F5, C1 | *Добавен 2026-10-26.* `get_auto_id()` → случайно 10-цифрено ID (както upstream на Android/iOS) вместо производното от MAC адреса. Без виртуализация ID-то се пази в конфига; с празна конфигурация (Enigma) — ново при всяко стартиране | Release build, празни конфигурации: QS и агентът на една машина → различни 10-цифрени ID (преди: и двата `501 818 368`) ✅ |
 
 Общите точки, които по-късните патчове ползват: `Connection::permission()` в `src/server/connection.rs` (всички права на контролираната страна) и `SwitchPermission` handler-ът (превключватели от CM по време на сесия).
 

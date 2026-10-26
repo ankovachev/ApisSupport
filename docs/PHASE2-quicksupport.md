@@ -14,7 +14,7 @@
 | `001-app-name` (hbb) | C1, C2 | `APP_NAME` по подразбиране = `{{APP_NAME}}` (`ApisQuickSupport`). Същият патч е и `agent/001-app-name` (там → `ApisAgent`) | Release build: config/log в `%APPDATA%\ApisQuickSupport\` (`ApisQuickSupport*.toml`), `%APPDATA%\RustDesk` непроменен (сравнение размер+време на всички файлове), IPC pipe `\\.\pipe\ApisQuickSupport\query`, нов ID ✅ |
 
 | `002-disable-unattended` (+hbb) | A1 | Без постоянна/preset парола структурно: `verification_method()` → само еднократна (→ `permanent_enabled()` = false); `set_permanent_password()` и `set_permanent_password_storage_for_sync()` не записват нищо (UI, IPC, `--password`, sync от услугата); `validate_password()` не проверява постоянна/preset парола (вкл. fallback-а на logon екрана); `insert_switch_sides_uuid()` → нищо, т.е. switch-sides отговор никога не авторизира без клик | `cargo check` ✅ (14); release build: задаване на постоянна парола от UI → `ApisQuickSupport.toml` не е презаписан, `password = ''` ✅; вход/switch-sides → Фаза 4 |
-| `003-consent-access-level` | A2, A9 | `permission()` → клавиатура/мишка изключени за всяка нова връзка (само гледане). Прозорецът за съгласие в CM (`buildUnAuthorized`) → „Само гледане“ / „Пълен контрол“ / „Откажи“ вместо „Приеми“ и „Приеми и повиши права“. „Пълен контрол“ праща `SwitchPermission(keyboard, true)` по същия канал преди `Authorize`, т.е. правото е налично от първия кадър. Превключвателят за клавиатура в CM остава — клиентът може да смени нивото по време на сесия | `cargo check` ✅ (14); release build ✅ (QS + агент); runtime тестът (агент → QS на една машина) е блокиран: двата получиха едно ID → `040` |
+| `003-consent-access-level` | A2, A9 | `permission()` → клавиатура/мишка изключени за всяка нова връзка (само гледане). Прозорецът за съгласие в CM (`buildUnAuthorized`) → „Само гледане“ / „Пълен контрол“ / „Откажи“ вместо „Приеми“ и „Приеми и повиши права“. „Пълен контрол“ праща `SwitchPermission(keyboard, true)` по същия канал преди `Authorize`, т.е. правото е налично от първия кадър. Превключвателят за клавиатура в CM остава — клиентът може да смени нивото по време на сесия | `cargo check` ✅ (14); release build ✅; агент → QS на една машина (след `040`): „Само гледане“ — кликовете не стигат до екрана ✅, „Пълен контрол“ — мишка/клавиатура работят ✅, „Откажи“ — връзката се затваря ✅ |
 
 Заедно с 001 е добавен общият `common/039-custom-client-hardening` (виж `PHASE1-common.md` §2), защото затваря пътищата, които сменят или използват APP_NAME.
 
@@ -55,6 +55,7 @@
 - `--password <p>` работи само за инсталиран + администратор → неприложимо за преносимия exe.
 - UI: опит за задаване на постоянна парола → полето `password` в `%APPDATA%\ApisQuickSupport\config\ApisQuickSupport.toml` трябва да остане празно.
 - Реален отказ на вход с постоянна парола и switch-sides → E2E с две машини (Фаза 4).
+- **Агент → QS на една машина** (от 003 нататък): двата build-а се копират в `builds\test\<product>\` (иначе вторият build презаписва първия) и се пускат оттам; QS се познава по банера „АПИС Дистанционна Поддръжка“. Огледалният образ е само визуален — кликът върху Start в отдалечения образ показва дали входът стига до екрана; при отказано право курсорът в агента е „забранен“. Скрипт: `Build-Both.ps1` (scratchpad на сесията — да стане `scripts/Build-Product.ps1`).
 
 ## 5. Отворени точки
 
